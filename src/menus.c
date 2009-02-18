@@ -30,7 +30,12 @@
 #include "setup.h"
 #include "video.h"
 
-char episode_name[6][31], difficulty_name[7][21], gameplay_name[5][26];
+char episode_name[6][31], difficulty_name[7][21],
+#ifdef TYRIAN2000
+gameplay_name[6][26];
+#else
+gameplay_name[5][26];
+#endif
 
 bool select_gameplay( void )
 {
@@ -38,14 +43,22 @@ bool select_gameplay( void )
 	JE_dString(JE_fontCenter(gameplay_name[0], FONT_SHAPES), 20, gameplay_name[0], FONT_SHAPES);
 	
 	int gameplay = 1,
-	    gameplay_max = 4;
+	#ifdef TYRIAN2000
+	    gameplay_max = 5;
+    #else
+        gameplay_max = 4;
+    #endif
 	
 	bool fade_in = true;
 	for (; ; )
 	{
 		for (int i = 1; i <= gameplay_max; i++)
 		{
+			#ifdef TYRIAN2000
+			JE_outTextAdjust(JE_fontCenter(gameplay_name[i], SMALL_FONT_SHAPES), i * 24 + 30, gameplay_name[i], 15, - 4 + (i == gameplay ? 2 : 0) - (i == 5 ? 4 : 0), SMALL_FONT_SHAPES, true);
+			#else
 			JE_outTextAdjust(JE_fontCenter(gameplay_name[i], SMALL_FONT_SHAPES), i * 24 + 30, gameplay_name[i], 15, - 4 + (i == gameplay ? 2 : 0) - (i == 4 ? 4 : 0), SMALL_FONT_SHAPES, true);
+			#endif
 		}
 		JE_showVGA();
 		
@@ -80,7 +93,11 @@ bool select_gameplay( void )
 				break;
 				
 			case SDLK_RETURN:
+                #ifdef TYRIAN2000
+				if (gameplay == 5)
+				#else
 				if (gameplay == 4)
+				#endif
 				{
 					JE_playSampleNum(ESC);
 					/* TODO: NETWORK */
@@ -90,8 +107,13 @@ bool select_gameplay( void )
 				JE_playSampleNum(SELECT);
 				JE_fadeBlack(10);
 				
+				#ifdef TYRIAN2000
+				onePlayerAction = (gameplay == 2);
+				twoPlayerMode = (gameplay == 4);
+				#else
 				onePlayerAction = (gameplay == 2);
 				twoPlayerMode = (gameplay == 3);
+				#endif
 				return true;
 				
 			case SDLK_ESCAPE:
@@ -116,7 +138,11 @@ bool select_episode( void )
 	JE_dString(JE_fontCenter(episode_name[0], FONT_SHAPES), 20, episode_name[0], FONT_SHAPES);
 	
 	int episode = 1,
+		#ifdef TYRIAN2000
+	    episode_max = EPISODE_MAX;
+	    #else
 	    episode_max = EPISODE_MAX - 1;
+	    #endif
 	
 	bool fade_in = true;
 	for (; ; )

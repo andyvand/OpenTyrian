@@ -54,28 +54,69 @@ JE_byte helpBoxShadeType = FULL_SHADE;
 
 char helpTxt[MAX_HELP_MESSAGE][231]; /* [1..maxhelpmessage] of string [230]; */
 char pName[21][16];                /* [1..21] of string [15] */
+#ifdef TYRIAN2000
+char miscText[72][42];			   /* [1..72] of string [41] */
+char miscTextB[8][12]; 			   /* [1..8] of string [11] */
+char menuText[7][29]; 			   /* [1..7] of string [28] */
+#else
 char miscText[68][42];             /* [1..68] of string [41] */
 char miscTextB[5][11];             /* [1..5] of string [10] */
-char keyName[8][18];               /* [1..8] of string [17] */
 char menuText[7][21];              /* [1..7] of string [20] */
+#endif
 char outputs[9][31];               /* [1..9] of string [30] */
 char topicName[6][21];             /* [1..6] of string [20] */
+#ifdef TYRIAN2000
+char mainMenuHelp[37][66];
+#else
 char mainMenuHelp[34][66];
+#endif
 char inGameText[6][21];            /* [1..6] of string [20] */
 char detailLevel[6][13];           /* [1..6] of string [12] */
 char gameSpeedText[5][13];         /* [1..5] of string [12] */
 char inputDevices[3][13];          /* [1..3] of string [12] */
+#ifdef TYRIAN2000
+char networkText[5][33];           /* [1..5] of string [32] */
+#else
 char networkText[4][21];           /* [1..4] of string [20] */
-char difficultyNameB[11][21];      /* [0..9] of string [20] */
+#endif
+char difficultyNameB[11][21];      /* [1..11] of string [20]*/
 char joyButtonNames[5][21];        /* [1..5] of string [20] */
+#ifdef TYRIAN2000
+char superShips[13][26]; 		   /* [0..12] of string [25] */
+char specialName[11][10]; 		   /* [1..11] of string [9] */
+#else
 char superShips[11][26];           /* [0..10] of string [25] */
 char specialName[9][10];           /* [1..9] of string [9] */
+#endif
 char destructHelp[25][22];
 char weaponNames[17][17];          /* [1..17] of string [16] */
 char destructModeName[DESTRUCT_MODES][13]; /* [1..destructmodes] of string [12] */
+#ifdef TYRIAN2000
+char shipInfo[20][2][256];
+#else
 char shipInfo[13][2][256];
+#endif
 char menuInt[MAX_MENU + 1][11][18];   /* [0..maxmenu, 1..11] of string [17] */
 
+#ifdef TYRIAN2000
+char time_pName[4][23];
+char setupMusic[10][12];
+char setupMusicHelp[5][60];
+char setupSound[4][13];
+char setupSoundHelp[4][52];
+char setupDetailHelp[5][60];
+char setupMenu[7][15];
+char setupMenuHelp[7][64];
+char setupSoundCard[21][27];
+char setupDMACard[3][16];
+char setupDMAHelp[3][41];
+char mouseSelChoice[6][9];
+char licInfo[3][46];
+char licInfoB[39][20];
+char licInfoC[10][17];
+char orderInfo[6][31];
+char lastSection[6][60];
+#endif
 
 JE_byte temp, temp2;
 
@@ -158,13 +199,21 @@ void JE_loadHelpText( void )
 	}
 	JE_skipCryptLn(f); JE_skipCryptLn(f);
 
+	#ifdef TYRIAN2000
+	for (i = 0; i < 72; i++)
+	#else
 	for (i = 0; i < 68; i++)
+	#endif
 	{
 		JE_readCryptLn(f, miscText[i]);      /*Miscellaneous text*/
 	}
 	JE_skipCryptLn(f); JE_skipCryptLn(f);
 
+	#ifdef TYRIAN2000
+	for (i = 0; i < 8; i++)
+	#else
 	for (i = 0; i < 5; i++)
+	#endif
 	{
 		JE_readCryptLn(f, miscTextB[i]);     /*Little Miscellaneous text*/
 	}
@@ -194,7 +243,11 @@ void JE_loadHelpText( void )
 	}
 	JE_skipCryptLn(f); JE_skipCryptLn(f);
 
+	#ifdef TYRIAN2000
+	for (i = 0; i < 37; i++)
+	#else
 	for (i = 0; i < 34; i++)
+	#endif
 	{
 		JE_readCryptLn(f,mainMenuHelp[i]);  /*Main Menu Help*/
 	}
@@ -212,7 +265,11 @@ void JE_loadHelpText( void )
 	}
 	JE_skipCryptLn(f); JE_skipCryptLn(f);
 
-	for (i = 0; i < 8; i++)
+    #ifdef TYRIAN2000
+	for (i = 0; i < 9; i++)
+	#else
+    for (i = 0; i < 8; i++)
+	#endif
 	{
 		JE_readCryptLn(f, menuInt[3][i]);    /*Menu 3 - Options*/
 	}
@@ -248,7 +305,11 @@ void JE_loadHelpText( void )
 	}
 	JE_skipCryptLn(f); JE_skipCryptLn(f);
 
-	for (i = 0; i <= 4; i++)
+    #ifdef TYRIAN2000
+	for (i = 0; i <= 5; i++)
+	#else
+    for (i = 0; i <= 4; i++)
+    #endif
 	{
 		JE_readCryptLn(f, gameplay_name[i]);
 	}
@@ -266,7 +327,11 @@ void JE_loadHelpText( void )
 	}
 	JE_skipCryptLn(f); JE_skipCryptLn(f);
 
+	#ifdef TYRIAN2000
+	for (i = 0; i < 5; i++)
+	#else
 	for (i = 0; i < 4; i++)
+	#endif
 	{
 		JE_readCryptLn(f, networkText[i]);       /*Network text*/
 	}
@@ -283,8 +348,12 @@ void JE_loadHelpText( void )
 		JE_readCryptLn(f, difficultyNameB[i]);   /*HighScore Difficulty Names*/
 	}
 	JE_skipCryptLn(f); JE_skipCryptLn(f);
-
+    
+    #ifdef TYRIAN2000
+	for (i = 0; i < 7; i++)
+	#else
 	for (i = 0; i < 6; i++)
+	#endif
 	{
 		JE_readCryptLn(f, menuInt[12][i]);       /*Menu 12 - Network Options*/
 	}
@@ -302,13 +371,21 @@ void JE_loadHelpText( void )
 	}
 	JE_skipCryptLn(f); JE_skipCryptLn(f);
 
+	#ifdef TYRIAN2000
+	for (i = 0; i <= 12; i++)
+	#else
 	for (i = 0; i <= 10; i++)
+	#endif
 	{
 		JE_readCryptLn(f, superShips[i]);        /*SuperShips - For Super Arcade Mode*/
 	}
 	JE_skipCryptLn(f); JE_skipCryptLn(f);
 
+	#ifdef TYRIAN2000
+	for (i = 0; i < 11; i++)
+	#else
 	for (i = 0; i < 9; i++)
+	#endif
 	{
 		JE_readCryptLn(f, specialName[i]);       /*SuperShips - For Super Arcade Mode*/
 	}
@@ -331,17 +408,129 @@ void JE_loadHelpText( void )
 		JE_readCryptLn(f, destructModeName[i]);  /*Secret DESTRUCT modes*/
 	}
 	JE_skipCryptLn(f); JE_skipCryptLn(f);
-
+ 
+    #ifdef TYRIAN2000
+	for (i = 0; i < 20; i++)
+	{
+		JE_readCryptLn(f, shipInfo[i][0]);
+		JE_readCryptLn(f, shipInfo[i][1]);
+	}
+	#else
 	for (i = 0; i < 13; i++)
 	{
 		JE_readCryptLn(f, shipInfo[i][0]);       /*NEW: Ship Info*/
 		JE_readCryptLn(f, shipInfo[i][1]);       /*NEW: Ship Info*/
 	}
+	#endif
 	JE_skipCryptLn(f); JE_skipCryptLn(f);
 
 	for (i = 0; i < 5; i++)
 	{
 		JE_readCryptLn(f, menuInt[14][i]);       /*Menu 12 - Network Options*/
+	#ifdef TYRIAN2000
+	}
+	JE_skipCryptLn(f); JE_skipCryptLn(f);
+
+	for (i = 0; i < 4; i++)
+	{
+		JE_readCryptLn(f, time_pName[i]);
+	}
+	JE_skipCryptLn(f); JE_skipCryptLn(f);
+
+	for (i = 0; i < 10; i++)
+	{
+		JE_readCryptLn(f, setupMusic[i]);
+	}
+	JE_skipCryptLn(f); JE_skipCryptLn(f);
+
+	for (i = 0; i < 5; i++)
+	{
+		JE_readCryptLn(f, setupMusicHelp[i]);
+	}
+	JE_skipCryptLn(f); JE_skipCryptLn(f);
+
+	for (i = 0; i < 4; i++)
+	{
+		JE_readCryptLn(f, setupSound[i]);
+	}
+	JE_skipCryptLn(f); JE_skipCryptLn(f);
+
+	for (i = 0; i < 4; i++)
+	{
+		JE_readCryptLn(f, setupSoundHelp[i]);
+	}
+	JE_skipCryptLn(f); JE_skipCryptLn(f);
+
+	for (i = 0; i < 5; i++)
+	{
+		JE_readCryptLn(f, setupDetailHelp[i]);
+	}
+	JE_skipCryptLn(f); JE_skipCryptLn(f);
+
+	for (i = 0; i < 7; i++)
+	{
+		JE_readCryptLn(f, setupMenu[i]);
+	}
+	JE_skipCryptLn(f); JE_skipCryptLn(f);
+
+	for (i = 0; i < 7; i++)
+	{
+		JE_readCryptLn(f, setupMenuHelp[i]);
+	}
+	JE_skipCryptLn(f); JE_skipCryptLn(f);
+
+	for (i = 0; i < 21; i++)
+	{
+		JE_readCryptLn(f, setupSoundCard[i]);
+	}
+	JE_skipCryptLn(f); JE_skipCryptLn(f);
+
+	for (i = 0; i < 3; i++)
+	{
+		JE_readCryptLn(f, setupDMACard[i]);
+	}
+	JE_skipCryptLn(f); JE_skipCryptLn(f);
+
+	for (i = 0; i < 3; i++)
+	{
+		JE_readCryptLn(f, setupDMAHelp[i]);
+	}
+	JE_skipCryptLn(f); JE_skipCryptLn(f);
+
+	for (i = 0; i < 6; i++)
+	{
+		JE_readCryptLn(f, mouseSelChoice[i]);
+	}
+	JE_skipCryptLn(f); JE_skipCryptLn(f);
+
+	for (i = 0; i < 3; i++)
+	{
+		JE_readCryptLn(f, licInfo[i]);
+	}
+	JE_skipCryptLn(f); JE_skipCryptLn(f);
+
+	for (i = 0; i < 39; i++)
+	{
+		JE_readCryptLn(f, licInfoB[i]);
+	}
+	JE_skipCryptLn(f); JE_skipCryptLn(f);
+
+	for (i = 0; i < 10; i++)
+	{
+		JE_readCryptLn(f, licInfoC[i]);
+	}
+	JE_skipCryptLn(f); JE_skipCryptLn(f);
+
+	for (i = 0; i < 6; i++)
+	{
+		JE_readCryptLn(f, orderInfo[i]);
+	}
+	JE_skipCryptLn(f); JE_skipCryptLn(f);
+
+	for (i = 0; i < 6; i++)
+	{
+		JE_readCryptLn(f, lastSection[i]);
+	#endif
 	}
 
 	fclose(f);

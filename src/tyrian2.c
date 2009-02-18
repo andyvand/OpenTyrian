@@ -4047,8 +4047,12 @@ new_game:
 void JE_titleScreen( JE_boolean animate )
 {
 	JE_boolean quit = 0;
-
+ 
+    #ifdef TYRIAN2000
+	const int menunum = 6;
+	#else
 	const int menunum = 7;
+	#endif
 	JE_byte nameGo[SA + 2] = {0}; /* [1..SA+2] */
 	JE_word waitForDemo;
 	JE_byte menu = 0;
@@ -4514,6 +4518,11 @@ void JE_titleScreen( JE_boolean animate )
 								redraw = true;
 								fadeIn = true;
 								break;
+							#ifdef TYRIAN2000
+							case 5: /* Quit */
+								quit = true;
+								break;
+							#else
 							case 5: /* Demo */
 								JE_initPlayerData();
 								playDemo = true;
@@ -4525,6 +4534,7 @@ void JE_titleScreen( JE_boolean animate )
 							case 6: /* Quit */
 								quit = true;
 								break;
+							#endif
 						}
 						redraw = true;
 						break;

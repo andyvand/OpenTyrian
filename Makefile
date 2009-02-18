@@ -3,6 +3,9 @@ DEBUG := 0
 # Valid values: WINDOWS, UNIX, GP2X
 PLATFORM := UNIX
 
+# If building TYRIAN2000 version
+GAME_VERSION := TYRIAN2000
+
 # If building for the GP2X
 GP2X_CHAINPREFIX := /opt/open2x/gcc-4.1.1-glibc-2.3.6
 GP2X_CHAIN := $(GP2X_CHAINPREFIX)/bin/arm-open2x-linux-
@@ -37,6 +40,10 @@ ifeq ($(PLATFORM), GP2X)
 	
 	CC := $(GP2X_CHAIN)gcc
 	STRIP := $(GP2X_CHAIN)strip
+endif
+
+ifeq ($(GAME_VERSION), TYRIAN2000)
+        CFLAGS += -DTYRIAN2000
 endif
 
 CFLAGS += $(DEBUG_FLAGS) $(SDL_CFLAGS)
