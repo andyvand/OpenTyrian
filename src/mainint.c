@@ -69,11 +69,9 @@ bool pause_pressed = false, ingamemenu_pressed = false;
 /* Draws a message at the bottom text window on the playing screen */
 void JE_drawTextWindow( char *text )
 {
-	tempScreenSeg = VGAScreenSeg; /*sega000*/
-	if (textErase > 0)
-	{
-		JE_newDrawCShapeNum(OPTION_SHAPES, 37, 16, 189);
-	}
+	if (textErase > 0) // erase current text
+		blit_shape(VGAScreenSeg, 16, 189, OPTION_SHAPES, 36);  // in-game text area
+	
 	textErase = 100;
 	tempScreenSeg = VGAScreenSeg; /*sega000*/
 	JE_outText(20, 190, text, 0, 4);
@@ -86,111 +84,99 @@ void JE_outCharGlow( JE_word x, JE_word y, char *s )
 	JE_shortint glowcolc[60]; /* [1..60] */
 	JE_word textloc[60]; /* [1..60] */
 	JE_byte b = 0, bank;
-
+	
 	setjasondelay2(1);
-
-	if (useLastBank)
+	
+	bank = (warningRed) ? 7 : ((useLastBank) ? 15 : 14);
+	
+	if (s[0] == '\0')
+		return;
+	
+	if (frameCountMax == 0)
 	{
-		bank = 15;
-	} else {
-		bank = 14;
+		JE_textShade(x, y, s, bank, 0, PART_SHADE);
+		JE_showVGA();
 	}
-	if (warningRed)
+	else
 	{
-		bank = 7;
-	}
-
-	if (s[0])
-	{
-		if (frameCountMax == 0)
+		maxloc = strlen(s);
+		tempScreenSeg = VGAScreen;
+		for (z = 0; z < 60; z++)
 		{
-			JE_textShade(x, y, s, bank, 0, PART_SHADE);
-			JE_showVGA();
-		} else {
-
-			maxloc = strlen(s);
-			tempScreenSeg = VGAScreen;
-			for (z = 0; z < 60; z++)
+			glowcol[z] = -8;
+			glowcolc[z] = 1;
+		}
+		
+		loc = x;
+		for (z = 0; z < maxloc; z++)
+		{
+			textloc[z] = loc;
+			if (s[z] == ' ')
+				loc += 6;
+			else
+				loc += shapeX[TINY_FONT][fontMap[(int)s[z]-33]] + 1;
+		}
+		
+		for (loc = 0; (unsigned)loc < strlen(s) + 28; loc++)
+		{
+			if (!ESCPressed)
 			{
-				glowcol[z] = -8;
-				glowcolc[z] = 1;
-			}
-
-			loc = x;
-			for (z = 0; z < maxloc; z++)
-			{
-				textloc[z] = loc;
-				if (s[z] == ' ')
+				setjasondelay(frameCountMax);
+				
+				NETWORK_KEEP_ALIVE();
+				
+				for (z = loc - 28; z <= loc; z++)
 				{
-					loc += 6;
-				} else {
-					loc += shapeX[TINY_FONT][fontMap[(int)s[z]-33]] + 1;
-				}
-			}
-
-			for (loc = 0; (unsigned)loc < strlen(s) + 28; loc++)
-			{
-				if (!ESCPressed)
-				{
-					setjasondelay(frameCountMax);
-					
-					NETWORK_KEEP_ALIVE();
-					
-					for (z = loc - 28; z <= loc; z++)
+					if (z >= 0 && z < maxloc)
 					{
-						if (z >= 0 && z < maxloc)
+						b = s[z];
+						if (b > 32 && b < 126)
 						{
-							b = s[z];
-							if (b > 32 && b < 126)
+							blit_shape_hv(VGAScreen, textloc[z], y, TINY_FONT, fontMap[b - 33], bank, glowcol[z]);
+							
+							glowcol[z] += glowcolc[z];
+							if (glowcol[z] > 9)
 							{
-								JE_newDrawCShapeAdjust(shapeArray[TINY_FONT][fontMap[b-33]], shapeX[TINY_FONT][fontMap[b-33]], shapeY[TINY_FONT][fontMap[b-33]], textloc[z], y, bank, glowcol[z]);
-								glowcol[z] += glowcolc[z];
-								if (glowcol[z] > 9)
-								{
-									glowcolc[z] = -1;
-								}
+								glowcolc[z] = -1;
 							}
 						}
 					}
-					if (b > 32 && b < 126 && --z < maxloc)
-					{
-						JE_newDrawCShapeShadow(shapeArray[TINY_FONT][fontMap[b-33]], shapeX[TINY_FONT][fontMap[b-33]], shapeY[TINY_FONT][fontMap[b-33]], textloc[z] + 1, y + 1);
-					}
-					if (JE_anyButton())
-					{
-						frameCountMax = 0;
-					}
-					do {
-						if (levelWarningDisplay)
-						{
-							JE_updateWarning();
-						}
-						
-						SDL_Delay(16);
-					} while (!(delaycount() == 0 || ESCPressed));
-					JE_showVGA();
 				}
+				if (b > 32 && b < 126 && --z < maxloc)
+					blit_shape_dark(tempScreenSeg, textloc[z] + 1, y + 1, TINY_FONT, fontMap[b-33], true);
+				
+				if (JE_anyButton())
+					frameCountMax = 0;
+				
+				do
+				{
+					if (levelWarningDisplay)
+						JE_updateWarning();
+					
+					SDL_Delay(16);
+				}
+				while (!(delaycount() == 0 || ESCPressed));
+				
+				JE_showVGA();
 			}
 		}
 	}
 }
 
-void JE_drawPortConfigButtons( void )
+void JE_drawPortConfigButtons( void ) // rear weapon pattern indicator
 {
-	if (!twoPlayerMode)
+	if (twoPlayerMode)
+		return;
+	
+	if (portConfig[1] == 1)
 	{
-		if (portConfig[1] == 1)
-		{
-			tempScreenSeg = VGAScreenSeg;
-			JE_newDrawCShapeNum(OPTION_SHAPES, 19, 285, 44);
-			tempScreenSeg = VGAScreenSeg;
-			JE_newDrawCShapeNum(OPTION_SHAPES, 20, 302, 44);
-		} else {
-			tempScreenSeg = VGAScreenSeg;
-			JE_newDrawCShapeNum(OPTION_SHAPES, 20, 285, 44);
-			tempScreenSeg = VGAScreenSeg;
-			JE_newDrawCShapeNum(OPTION_SHAPES, 19, 302, 44);
-		}
+		blit_shape(VGAScreenSeg, 285, 44, OPTION_SHAPES, 18);  // lit
+		blit_shape(VGAScreenSeg, 302, 44, OPTION_SHAPES, 19);  // unlit
+	}
+	else
+	{
+		blit_shape(VGAScreenSeg, 285, 44, OPTION_SHAPES, 19);  // unlit
+		blit_shape(VGAScreenSeg, 302, 44, OPTION_SHAPES, 18);  // lit
 	}
 }
 
@@ -1453,9 +1439,9 @@ void JE_inGameHelp( void )
 	VGAScreen = VGAScreenSeg; /* side-effect of game_screen */
 	
 	tempScreenSeg = VGAScreenSeg;
+	
 	JE_clearKeyboard();
 	JE_wipeKey();
-	//JE_getVGA();  didn't do anything anyway?
 	
 	JE_barShade(1, 1, 262, 182); /*Main Box*/
 	JE_barShade(3, 3, 260, 180);
@@ -1463,26 +1449,26 @@ void JE_inGameHelp( void )
 	JE_barShade(7, 7, 256, 176);
 	JE_bar     (9, 9, 254, 174, 0);
 	
-	/* Start Draw */
-	
-	if (twoPlayerMode)
-	{  /*Two-Player Help*/
-		
+	if (twoPlayerMode)  // Two-Player Help
+	{
 		helpBoxColor = 3;
 		helpBoxBrightness = 3;
 		JE_HBox(20,  4, 36, 50);
 		
-		JE_newDrawCShapeNum(OPTION_SHAPES, 44, 2, 21);
+		// weapon help
+		blit_shape(VGAScreenSeg, 2, 21, OPTION_SHAPES, 43);
 		helpBoxColor = 5;
 		helpBoxBrightness = 3;
 		JE_HBox(55, 20, 37, 40);
 		
-		JE_newDrawCShapeNum(OPTION_SHAPES, 42, 5, 36);
+		// sidekick help
+		blit_shape(VGAScreenSeg, 5, 36, OPTION_SHAPES, 41);
 		helpBoxColor = 5;
 		helpBoxBrightness = 3;
 		JE_HBox(40, 43, 34, 44);
 		
-		JE_newDrawCShapeNum(OPTION_SHAPES, 43, 2, 79);
+		// sheild/armor help
+		blit_shape(VGAScreenSeg, 2, 79, OPTION_SHAPES, 42);
 		helpBoxColor = 5;
 		helpBoxBrightness = 3;
 		JE_HBox(54, 84, 35, 40);
@@ -1493,15 +1479,17 @@ void JE_inGameHelp( void )
 		helpBoxColor = 5;
 		helpBoxBrightness = 3;
 		JE_HBox(5, 160, 39, 55);
-		
-	} else {
-		
-		JE_newDrawCShapeNum(OPTION_SHAPES, 41, 15, 5);
+	}
+	else
+	{
+		// power bar help
+		blit_shape(VGAScreenSeg, 15, 5, OPTION_SHAPES, 40);
 		helpBoxColor = 5;
 		helpBoxBrightness = 3;
 		JE_HBox(40, 10, 31, 45);
 		
-		JE_newDrawCShapeNum(OPTION_SHAPES, 40, 5, 37);
+		// weapon help
+		blit_shape(VGAScreenSeg, 5, 37, OPTION_SHAPES, 39);
 		helpBoxColor = 5;
 		helpBoxBrightness = 3;
 		JE_HBox(40, 40, 32, 44);
@@ -1509,31 +1497,31 @@ void JE_inGameHelp( void )
 		helpBoxBrightness = 3;
 		JE_HBox(40, 60, 33, 44);
 		
-		JE_newDrawCShapeNum(OPTION_SHAPES, 42, 5, 98);
+		// sidekick help
+		blit_shape(VGAScreenSeg, 5, 98, OPTION_SHAPES, 41);
 		helpBoxColor = 5;
 		helpBoxBrightness = 3;
 		JE_HBox(40, 103, 34, 44);
 		
-		JE_newDrawCShapeNum(OPTION_SHAPES, 43, 2, 138);
+		// shield/armor help
+		blit_shape(VGAScreenSeg, 2, 138, OPTION_SHAPES, 42);
 		helpBoxColor = 5;
 		helpBoxBrightness = 3;
 		JE_HBox(54, 143, 35, 40);
-		
 	}
 	
-	/* End Draw */
-	
-	JE_newDrawCShapeNum(OPTION_SHAPES, 37, 16, 189);
+	// "press a key"
+	blit_shape(VGAScreenSeg, 16, 189, OPTION_SHAPES, 36);  // in-game text area
 	JE_outText(120 - JE_textWidth(miscText[5-1], TINY_FONT) / 2 + 20, 190, miscText[5-1], 0, 4);
 	
 	JE_showVGA();
 	
-	do {
-		
+	do
+	{
 		tempW = 0;
 		JE_textMenuWait(&tempW, true);
-		
-	} while (!inputDetected);
+	}
+	while (!inputDetected);
 	
 	textErase = 1;
 	
@@ -1573,7 +1561,9 @@ void JE_highScoreCheck( void )
 						tempscore = score2;
 						break;
 				}
-			} else {
+			}
+			else
+			{
 				tempscore = JE_totalScore(score, pItems);
 			}
 			
@@ -1622,7 +1612,8 @@ void JE_highScoreCheck( void )
 				
 				JE_barShade(65, 55, 255, 155);
 				
-				do {
+				do
+				{
 					service_SDL_events(true);
 					
 					JE_dString(JE_fontCenter(miscText[52-1], FONT_SHAPES), 3, miscText[52-1], FONT_SHAPES);
@@ -1631,27 +1622,24 @@ void JE_highScoreCheck( void )
 					
 					JE_dString(JE_fontCenter(miscText[temp3-1], SMALL_FONT_SHAPES), 30, miscText[temp3-1], SMALL_FONT_SHAPES);
 					
-					JE_newDrawCShapeNum(OPTION_SHAPES, 36, 50, 50);
+					blit_shape(VGAScreenSeg, 50, 50, OPTION_SHAPES, 35);  // message box
 					
 					if (twoPlayerMode)
 					{
 						sprintf(buffer, "%s %s", miscText[48 + z-1], miscText[54-1]);
 						JE_textShade(60, 55, buffer, 11, 4, FULL_SHADE);
-					} else {
+					}
+					else
+					{
 						JE_textShade(60, 55, miscText[54-1], 11, 4, FULL_SHADE);
 					}
 					
 					sprintf(buffer, "%s %d", miscText[38-1], tempscore);
 					JE_textShade(70, 70, buffer, 11, 4, FULL_SHADE);
 					
-					do {
-						
-						if (flash == 8 * 16 + 10)
-						{
-							flash = 8 * 16 + 2;
-						} else {
-							flash = 8 * 16 + 10;
-						}
+					do
+					{
+						flash = (flash == 8 * 16 + 10) ? 8 * 16 + 2 : 8 * 16 + 10;
 						temp3 = (temp3 == 6) ? 2 : 6;
 						
 						strncpy(tempstr, stemp, temp);
@@ -1684,20 +1672,22 @@ void JE_highScoreCheck( void )
 					} while (!newkey && !newmouse);
 					
 					if (!playing)
-					{
 						JE_playSong(32);
-					}
 					
 					if (mouseButton > 0)
 					{
 						if (mouseX > 56 && mouseX < 142 && mouseY > 123 && mouseY < 149)
 						{
 							quit = true;
-						} else if (mouseX > 151 && mouseX < 237 && mouseY > 123 && mouseY < 149) {
+						}
+						else if (mouseX > 151 && mouseX < 237 && mouseY > 123 && mouseY < 149)
+						{
 							quit = true;
 							cancel = true;
 						}
-					} else if (newkey) {
+					}
+					else if (newkey)
+					{
 						bool validkey = false;
 						lastkey_char = toupper(lastkey_char);
 						switch(lastkey_char)
@@ -1749,8 +1739,8 @@ void JE_highScoreCheck( void )
 								break;
 						}
 					}
-					
-				} while (!quit);
+				}
+				while (!quit);
 				
 				if (!cancel)
 				{
@@ -1791,7 +1781,9 @@ void JE_highScoreCheck( void )
 				{
 					frameCountMax = 6;
 					temp = 1;
-				} else {
+				}
+				else
+				{
 					temp = 0;
 				}
 				textGlowBrightness = 10;
@@ -2132,7 +2124,7 @@ void JE_playCredits( void )
 		setjasondelay(1);
 		JE_clr256();
 		
-		JE_newDrawCShapeAdjust(shapeArray[EXTRA_SHAPES][currentpic-1], shapeX[EXTRA_SHAPES][currentpic-1], shapeY[EXTRA_SHAPES][currentpic-1], 319 - shapeX[EXTRA_SHAPES][currentpic-1], 100 - (shapeY[EXTRA_SHAPES][currentpic-1] / 2), 0, fade - 15);
+		blit_shape_hv(VGAScreenSeg, 319 - shapeX[EXTRA_SHAPES][currentpic-1], 100 - (shapeY[EXTRA_SHAPES][currentpic-1] / 2), EXTRA_SHAPES, currentpic-1, 0x0, fade - 15);
 		
 		fade += fadechg;
 		if (fade == 0 && fadechg == -1)
@@ -2275,9 +2267,7 @@ void JE_endLevelAni( void )
 		
 		/*Special*/
 		if (pItems[11-1] < 21)
-		{
 			saveTemp[SAVE_FILES_SIZE + 81 + pItems[11-1]] = 1;
-		}
 		
 		/*Options*/
 		saveTemp[SAVE_FILES_SIZE + 51 + pItems[4-1]] = 1;
@@ -2298,19 +2288,21 @@ void JE_endLevelAni( void )
 	JE_setPalette(254, 255, 255, 255);
 	
 	if (!levelTimer || levelTimerCountdown > 0 || !(episodeNum == 4))
-	{
 		JE_playSampleNum(V_LEVEL_END);
-	} else {
+	else
 		JE_playSong(22);
-	}
-  
+	  
 	if (bonusLevel)
 	{
 		JE_outTextGlow(20, 20, miscText[17-1]);
-	} else if (playerAlive && (!twoPlayerMode || playerAliveB)) {
+	}
+	else if (playerAlive && (!twoPlayerMode || playerAliveB))
+	{
 		sprintf(tempStr, "%s %s", miscText[27-1], levelName);
 		JE_outTextGlow(20, 20, tempStr);
-	} else {
+	}
+	else
+	{
 		sprintf(tempStr, "%s %s", miscText[62-1], levelName);
 		JE_outTextGlow(20, 20, tempStr);
 	}
@@ -2322,24 +2314,19 @@ void JE_endLevelAni( void )
 		
 		sprintf(tempStr, "%s %d", miscText[42-1], score2);
 		JE_outTextGlow(30, 70, tempStr);
-	} else {
+	}
+	else
+	{
 		sprintf(tempStr, "%s %d", miscText[28-1], score);
 		JE_outTextGlow(30, 50, tempStr);
 	}
 	
-	if (totalEnemy == 0)
-	{
-		temp = 0;
-	} else {
-		temp = round(enemyKilled * 100 / totalEnemy);
-	}
+	temp = (totalEnemy == 0) ? 0 : round(enemyKilled * 100 / totalEnemy);
 	sprintf(tempStr, "%s %d%%", miscText[63-1], temp);
 	JE_outTextGlow(40, 90, tempStr);
 	
 	if (!constantPlay)
-	{
 		editorLevel += temp / 5;
-	}
 	
 	if (!onePlayerAction && !twoPlayerMode)
 	{
@@ -2348,13 +2335,11 @@ void JE_endLevelAni( void )
 		if (cubeMax > 0)
 		{
 			if (cubeMax > 4)
-			{
 				cubeMax = 4;
-			}
+			
 			if (frameCountMax != 0)
-			{
 				frameCountMax = 1;
-			}
+			
 			for (temp = 1; temp <= cubeMax; temp++)
 			{
 				NETWORK_KEEP_ALIVE();
@@ -2368,12 +2353,11 @@ void JE_endLevelAni( void )
 				for (i = -15; i <= 10; i++)
 				{
 					setjasondelay(frameCountMax);
-					tempScreenSeg = VGAScreenSeg; /* sega000 */
-					JE_newDrawCShapeAdjustNum(OPTION_SHAPES, 26, x, y, 9, i);
+					
+					blit_shape_hv(VGAScreenSeg, x, y, OPTION_SHAPES, 25, 0x9, i);
+					
 					if (JE_anyButton())
-					{
 						frameCountMax = 0;
-					}
 					
 					JE_showVGA();
 					
@@ -2382,19 +2366,20 @@ void JE_endLevelAni( void )
 				for (i = 10; i >= 0; i--)
 				{
 					setjasondelay(frameCountMax);
-					tempScreenSeg = VGAScreenSeg; /* sega000 */
-					JE_newDrawCShapeAdjustNum(OPTION_SHAPES, 26, x, y, 9, i);
+					
+					blit_shape_hv(VGAScreenSeg, x, y, OPTION_SHAPES, 25, 0x9, i);
+					
 					if (JE_anyButton())
-					{
 						frameCountMax = 0;
-					}
 					
 					JE_showVGA();
 					
 					wait_delay();
 				}
 			}
-		} else {
+		}
+		else
+		{
 			JE_outTextGlow(50, 135, miscText[15-1]);
 		}
 		
@@ -2430,9 +2415,9 @@ void JE_endLevelAni( void )
 
 void JE_drawCube( JE_word x, JE_word y, JE_byte filter, JE_byte brightness )
 {
-	JE_newDrawCShapeDarken(shapeArray[OPTION_SHAPES][26-1], shapeX[OPTION_SHAPES][26-1], shapeY[OPTION_SHAPES][26 - 1], x + 4, y + 4);
-	JE_newDrawCShapeDarken(shapeArray[OPTION_SHAPES][26-1], shapeX[OPTION_SHAPES][26-1], shapeY[OPTION_SHAPES][26 - 1], x + 3, y + 3);
-	JE_newDrawCShapeAdjustNum(OPTION_SHAPES, 26, x, y, filter, brightness);
+	blit_shape_dark(tempScreenSeg, x + 4, y + 4, OPTION_SHAPES, 25, false);
+	blit_shape_dark(tempScreenSeg, x + 3, y + 3, OPTION_SHAPES, 25, false);
+	blit_shape_hv(tempScreenSeg, x, y, OPTION_SHAPES, 25, filter, brightness);
 }
 
 void JE_handleChat( void )
@@ -2490,14 +2475,14 @@ void JE_operation( JE_byte slot )
 			{
 				onePlayerAction = true;
 				if (pItems[3-1] == 255)
-				{
 					superTyrian = true;
-				} else {
+				else
 					superArcadeMode = pItems[3-1];
-				}
 			}
 		}
-	} else if (slot % 11 != 0) {
+	}
+	else if (slot % 11 != 0)
+	{
 		quit = false;
 		strcpy(stemp, "              ");
 		memcpy(stemp, saveFiles[slot-1].name, strlen(saveFiles[slot-1].name));
@@ -2510,15 +2495,17 @@ void JE_operation( JE_byte slot )
 		
 		JE_barShade(65, 55, 255, 155);
 		
-		do {
+		do
+		{
 			service_SDL_events(true);
 			
-			JE_newDrawCShapeNum(OPTION_SHAPES, 36, 50, 50);
+			blit_shape(VGAScreenSeg, 50, 50, OPTION_SHAPES, 35);  // message box
 			
 			JE_textShade(60, 55, miscText[1-1], 11, 4, DARKEN);
 			JE_textShade(70, 70, levelName, 11, 4, DARKEN);
 			
-			do {
+			do
+			{
 				flash = (flash == 8 * 16 + 10) ? 8 * 16 + 2 : 8 * 16 + 10;
 				temp3 = (temp3 == 6) ? 2 : 6;
 				
@@ -2544,7 +2531,8 @@ void JE_operation( JE_byte slot )
 						break;
 				}
 				
-			} while (!newkey && !newmouse);
+			}
+			while (!newkey && !newmouse);
 			
 			if (mouseButton > 0)
 			{
@@ -2553,11 +2541,15 @@ void JE_operation( JE_byte slot )
 					quit = true;
 					JE_saveGame(slot, stemp);
 					JE_playSampleNum(SELECT);
-				} else if (mouseX > 151 && mouseX < 237 && mouseY > 123 && mouseY < 149) {
+				}
+				else if (mouseX > 151 && mouseX < 237 && mouseY > 123 && mouseY < 149)
+				{
 					quit = true;
 					JE_playSampleNum(ESC);
 				}
-			} else if (newkey) {
+			}
+			else if (newkey)
+			{
 				bool validkey = false;
 				lastkey_char = toupper(lastkey_char);
 				switch (lastkey_char)
@@ -2615,8 +2607,8 @@ void JE_operation( JE_byte slot )
 				}
 				
 			}
-		
-		} while (!quit);
+		}
+		while (!quit);
 	}
 	
 	wait_noinput(false, true, false);

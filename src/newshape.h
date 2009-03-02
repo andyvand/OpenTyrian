@@ -50,16 +50,18 @@ extern JE_word shapeSize[MAX_TABLE][MAXIMUM_SHAPE];
 extern JE_boolean shapeExist[MAX_TABLE][MAXIMUM_SHAPE];
 extern JE_byte maxShape[MAX_TABLE];
 extern JE_byte mouseGrabShape[24 * 28];
-/*extern JE_word min, max;*/
 
 void JE_newLoadShapes( JE_byte table, char *shapefile );
 void JE_newLoadShapesB( JE_byte table, FILE *f );
 void JE_newCompressBlock( JE_byte **shape, JE_word xsize, JE_word ysize, JE_word *shapesize );
-void JE_newDrawShape( JE_byte *shape, JE_word xsize, JE_word ysize );
-void JE_newDrawCShape( JE_byte *shape, JE_word xsize, JE_word ysize );
-void JE_newDrawCShapeNum( JE_byte table, JE_byte shape, JE_word x, JE_word y );
 void JE_newPurgeShapes( JE_byte table );
-/*void JE_OverrideLoadShapes( JE_byte table, char *shapefile, JE_word minimum, JE_word maximum );*/
+
+void blit_shape( SDL_Surface *surface, int x, int y, unsigned int table, unsigned int index ); // JE_newDrawCShapeNum
+void blit_shape_blend( SDL_Surface *surface, int x, int y, unsigned int table, unsigned int index ); // JE_newDrawCShapeTrick
+void blit_shape_hv_unsafe( SDL_Surface *surface, int x, int y, unsigned int table, unsigned int index, Uint8 hue, Sint8 value ); // JE_newDrawCShapeBright
+void blit_shape_hv( SDL_Surface *surface, int x, int y, unsigned int table, unsigned int index, Uint8 hue, Sint8 value ); // JE_newDrawCShapeAdjust
+void blit_shape_hv_blend( SDL_Surface *surface, int x, int y, unsigned int table, unsigned int index, Uint8 hue, Sint8 value ); // JE_newDrawCShapeModify
+void blit_shape_dark( SDL_Surface *surface, int x, int y, unsigned int table, unsigned int index, bool black ); // JE_newDrawCShapeDarken, JE_newDrawCShapeShadow
 
 void JE_drawShapeTypeOne( JE_word x, JE_word y, JE_byte *shape );
 void JE_grabShapeTypeOne( JE_word x, JE_word y, JE_byte *shape );
