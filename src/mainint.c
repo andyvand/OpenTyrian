@@ -437,7 +437,7 @@ void JE_loadMainShapeTables( char *shpfile )
 	JE_resetFile(&f, shpfile);
 	
 	JE_word shpNumb;
-	JE_longint shpPos[SHP_NUM + 1]; // +1 for storing file length
+	JE_longint shpPos[SHP_NUM + 1 +1]; // +1 for storing file length
 	
 	efread(&shpNumb, sizeof(JE_word), 1, f);
 	assert(shpNumb + 1 <= COUNTOF(shpPos));
