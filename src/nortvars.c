@@ -74,7 +74,7 @@ JE_word JE_btow(JE_byte a, JE_byte b)
 
 	//fclose(f);
 
-	///*fprintf(stderr, "Shapes%c completed.\n", s);*/
+	//*fprintf(stderr, "Shapes%c completed.\n", s);*/
 //}
 
 //void JE_loadNewShapeFile( JE_NewShapeType *shapes, JE_char s )
@@ -140,7 +140,7 @@ JE_word JE_btow(JE_byte a, JE_byte b)
 
 	//fclose(f);
 
-	///*fprintf(stderr, "Shapes%c completed.\n", s);*/
+	//*fprintf(stderr, "Shapes%c completed.\n", s);*/
 //}
 
 void JE_loadCompShapes( JE_byte **shapes, JE_word *shapeSize, JE_char s )
@@ -154,7 +154,8 @@ void JE_loadCompShapes( JE_byte **shapes, JE_word *shapeSize, JE_char s )
 	{
 		free(*shapes);
 	}
-
+	
+	printf("reading %s file nortvars.c\n", buffer);
 	JE_resetFile(&f, buffer);
 
 	fseek(f, 0, SEEK_END);

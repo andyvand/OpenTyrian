@@ -126,8 +126,6 @@ const JE_byte itemAvailMap[7] = { 1, 2, 3, 9, 4, 6, 7 };
 
 const JE_byte weaponReset[7] = { 0, 1, 2, 0, 0, 3, 4 };
 
-const JE_byte mouseSelectionY[MAX_MENU] = { 16, 16, 16, 16, 26, 12, 11, 28, 0, 16, 16, 16, 24, 16 };
-
 void JE_starShowVGA( void )
 {
 	JE_byte *src;
@@ -2893,6 +2891,7 @@ new_game:
 		do
 		{
 			JE_resetFile(&lvlFile, macroFile);
+			printf("reading %s file tyrian2.c\n", macroFile);
 
 			x = 0;
 			jumpSection = false;
@@ -3114,7 +3113,9 @@ new_game:
 									sprintf(levelWarningText[1], "%s %d", miscText[41], score2);
 									strcpy(levelWarningText[2], "");
 									levelWarningLines = 3;
-								} else {
+								}
+								else
+								{
 									sprintf(levelWarningText[0], "%s %d", miscText[37], JE_totalScore(score, pItems));
 									strcpy(levelWarningText[1], "");
 									levelWarningLines = 2;
@@ -3123,9 +3124,8 @@ new_game:
 								for (x = 0; x < temp - 1; x++)
 								{
 									do
-									{
 										JE_readCryptLn(lvlFile, s);
-									} while (s[0] != '#');
+									while (s[0] != '#');
 								}
 
 								do
@@ -3133,15 +3133,14 @@ new_game:
 									JE_readCryptLn(lvlFile, s);
 									strcpy(levelWarningText[levelWarningLines], s);
 									levelWarningLines++;
-								} while (s[0] != '#');
+								}
+								while (s[0] != '#');
 								levelWarningLines--;
 
 								JE_wipeKey();
 								frameCountMax = 4;
 								if (!constantPlay)
-								{
 									JE_displayText();
-								}
 
 								JE_fadeBlack(15);
 
@@ -3155,12 +3154,7 @@ new_game:
 
 									if (superTyrian)
 									{
-										if (initialDifficulty == 8)
-										{
-											superArcadeMode = SA + 1;
-										} else {
-											superArcadeMode = 1;
-										}
+										superArcadeMode = (initialDifficulty == 8) ? SA + 1 : 1;
 
 										jumpSection = true;
 										loadTitleScreen = true;
@@ -3178,7 +3172,9 @@ new_game:
 										{
 											JE_dString(JE_fontCenter(superShips[0], FONT_SHAPES), 30, superShips[0], FONT_SHAPES);
 											JE_dString(JE_fontCenter(superShips[SANextShip[superArcadeMode]], SMALL_FONT_SHAPES), 100, superShips[SANextShip[superArcadeMode]], SMALL_FONT_SHAPES);
-										} else {
+										}
+										else
+										{
 											sprintf(buffer, "%s %s", miscTextB[4], pName[0]);
 											JE_dString(JE_fontCenter(buffer, FONT_SHAPES), 100, buffer, FONT_SHAPES);
 										}
@@ -3186,11 +3182,10 @@ new_game:
 										if (SANextShip[superArcadeMode] < 7)
 										{
 											JE_drawShape2x2(148, 70, ships[SAShip[SANextShip[superArcadeMode]-1]].shipgraphic, shapes9);
-										} else {
-											if (SANextShip[superArcadeMode] == 7)
-											{
-												trentWin = true;
-											}
+										}
+										else if (SANextShip[superArcadeMode] == 7)
+										{
+											trentWin = true;
 										}
 
 										sprintf(buffer, "Type %s at Title", specialName[SANextShip[superArcadeMode]-1]);
@@ -3198,21 +3193,18 @@ new_game:
 										JE_showVGA();
 
 										JE_fadeColor(50);
+										
 										if (!constantPlay)
-										{
-											while (!JE_anyButton());
-										}
+											wait_input(true, true, true);
 									}
 
 									jumpSection = true;
+									
 									if (isNetworkGame)
-									{
 										JE_readTextSync();
-									}
+									
 									if (superTyrian)
-									{
 										JE_fadeBlack(10);
-									}
 								}
 								break;
 
@@ -3474,6 +3466,17 @@ new_game:
 								temp = atoi(strnztcpy(buffer, s + 3, 3));
 								JE_playSong(temp);
 								break;
+							
+							case 'T':
+								/* TODO: Timed Battle ]T[ 43 44 45 46 47 */
+								printf("]T[ 43 44 45 46 47 handle timed battle!");
+								break;
+								
+							case 'q':
+								/* TODO: Timed Battle end */
+								printf("handle timed battle end flag!");
+								break;
+								
 						}
 					break;
 				}
@@ -3519,7 +3522,7 @@ new_game:
 			JE_fadeColors(colors, black, 0, 255, 50);
 		}
 
-
+		printf("reading %s file tyrian2.c\n", levelFile);
 		JE_resetFile(&lvlFile, levelFile);
 		fseek(lvlFile, lvlPos[(lvlFileNum-1) * 2], SEEK_SET);
 
@@ -3565,6 +3568,7 @@ new_game:
 
 		/* Read Shapes.DAT */
 		sprintf(tempStr, "shapes%c.dat", tolower(char_shapeFile));
+		printf("reading %s file tyrian2.c\n", tempStr);
 		JE_resetFile(&shpFile, tempStr);
 
 		for (z = 0; z < 600; z++)
@@ -6785,6 +6789,8 @@ item_screen_start:
 
 			if (tempB && (mouseY > 20) && (mouseX > 170) && (mouseX < 308) && (curMenu != 8))
 			{
+				const JE_byte mouseSelectionY[MAX_MENU] = { 16, 16, 16, 16, 26, 12, 11, 28, 0, 16, 16, 16, 8, 16 };
+				
 				tempI = (mouseY - 38) / mouseSelectionY[curMenu]+2;
 
 				if (curMenu == 9)
@@ -6822,12 +6828,16 @@ item_screen_start:
 						score = JE_cashLeft();
 						curMenu = 1;
 						JE_playSampleNum(ITEM);
-					} else {
+					}
+					else
+					{
 						JE_playSampleNum(CLICK);
 						if (curSel[curMenu] == tempI)
 						{
 							JE_menuFunction(curSel[curMenu]);
-						} else {
+						}
+						else
+						{
 							if ((curMenu == 4) && ((curSel[1] == 3) || (curSel[1] == 4)))
 							{
 								tempPowerLevel[curSel[4]-2] = portPower[curSel[1]-3];
@@ -6835,11 +6845,11 @@ item_screen_start:
 							if ((curMenu == 5) && (JE_getCost(curSel[1], itemAvail[itemAvailMap[curSel[2]-1]][tempI-1]) > score))
 							{
 								JE_playSampleNum(WRONG);
-							} else {
+							}
+							else
+							{
 								if (curSel[1] == 4)
-								{
 									portConfig[1] = 1;
-								}
 								curSel[curMenu] = tempI;
 							}
 
@@ -6851,9 +6861,6 @@ item_screen_start:
 					}
 				}
 
-				/*do {
-					mouseButton = JE_mousePosition(&tempX, &tempY);
-				} while (!(mouseButton == 0));*/
 				wait_noinput(false, true, false);
 			}
 

@@ -434,20 +434,27 @@ void JE_loadMainShapeTables( char *shpfile )
 {
 	FILE *f;
 	
+	printf("reading %s file mainint.c\n", shpfile);
 	JE_resetFile(&f, shpfile);
 	
 	JE_word shpNumb;
-	JE_longint shpPos[SHP_NUM + 1 +1]; // +1 for storing file length
-	
-	efread(&shpNumb, sizeof(JE_word), 1, f);
-	assert(shpNumb + 1 <= COUNTOF(shpPos));
-	
-	for (int i = 0; i < shpNumb; i++)
-	{
-		efread(&shpPos[i], sizeof(JE_longint), 1, f);
-	}
-	fseek(f, 0, SEEK_END);
-	shpPos[shpNumb] = ftell(f);
+    
+    efread(&shpNumb, sizeof(JE_word), 1, f);
+    assert(shpNumb + 1 <= COUNTOF(shpPos));
+    JE_longint shpPos[shpNumb+1]; // number of texture banks +1 for file length
+
+    for (int i = 0; i < shpNumb; i++)
+    {
+            efread(&shpPos[i], sizeof(JE_longint), 1, f);
+    }
+    fseek(f, 0, SEEK_END);
+    shpPos[shpNumb] = ftell(f);
+    
+    printf("offset 1 at %x\n",shpPos[0]);
+    for(int slot = 1;slot<=shpNumb+1;slot++){ // debug printing for offsets
+    printf("slot %d is %ld bytes long\n",slot,shpPos[slot]-shpPos[slot-1]);
+    printf("offset %d at %x",slot,shpPos[slot]);
+    }
 	
 	int i;
 	// fonts, interface, option sprites

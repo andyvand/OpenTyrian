@@ -56,6 +56,7 @@ void JE_loadItemDat( void )
 {
 	FILE *lvlFile;
 	JE_word itemNum[7]; /* [1..7] */
+	//char array[101];
 
 	int i, j;
 
@@ -70,6 +71,11 @@ void JE_loadItemDat( void )
 	}
 
 	efread(&itemNum, sizeof(JE_word), 7, lvlFile);
+
+/*	for (i = 0; i < 7; i++)
+	{
+		fprintf(stderr, "macro %d --- %d\n", i, itemNum[i]);
+	}*/
 
 	for (i = 0; i < WEAP_NUM + 1; i++)
 	{
@@ -95,12 +101,21 @@ void JE_loadItemDat( void )
 		efread(&weapons[i].trail,           sizeof(JE_byte), 1, lvlFile);
 		efread(&weapons[i].shipblastfilter, sizeof(JE_byte), 1, lvlFile);
 	}
+	
+	fprintf(stderr, "printing WEAPONPORT\n\n");
+
+	unsigned long int position2;
+	fgetpos(lvlFile, &position2);
+	fprintf(stderr, "weaponPort at %ld\n", position2);
+	if (episodeNum <= 3)
+	fseek(lvlFile, 0x252A4, SEEK_SET);
 
 	for (i = 0; i < PORT_NUM + 1; i++)
 	{
 		fseek(lvlFile, 1, SEEK_CUR); /* skip string length */
 		efread(&weaponPort[i].name,        1, 30, lvlFile);
 		weaponPort[i].name[30] = '\0';
+		fprintf(stderr, "--%s-- \n", weaponPort[i].name);
 		efread(&weaponPort[i].opnum,       sizeof(JE_byte), 1, lvlFile);
 		for (j = 0; j < 2; j++)
 		{
@@ -111,33 +126,60 @@ void JE_loadItemDat( void )
 		efread(&weaponPort[i].poweruse,    sizeof(JE_word), 1, lvlFile);
 	}
 
+	fprintf(stderr, "printing SPECIAL\n\n");
+
+	unsigned long int position3;
+	fgetpos(lvlFile, &position3);
+	fprintf(stderr, "special at %ld\n", position3);
+	if (episodeNum <= 3)
+	fseek(lvlFile, 0x2662E, SEEK_SET);
+
 	for (i = 0; i < SPECIAL_NUM + 1; i++)
 	{
 		fseek(lvlFile, 1, SEEK_CUR); /* skip string length */
 		efread(&special[i].name,        1, 30, lvlFile);
 		special[i].name[30] = '\0';
+		fprintf(stderr, "--%s-- \n", special[i].name);
 		efread(&special[i].itemgraphic, sizeof(JE_word), 1, lvlFile);
 		efread(&special[i].pwr,         sizeof(JE_byte), 1, lvlFile);
 		efread(&special[i].stype,       sizeof(JE_byte), 1, lvlFile);
 		efread(&special[i].wpn,         sizeof(JE_word), 1, lvlFile);
 	}
 
+	fprintf(stderr, "printing POWERSYS\n\n");
+
+	unsigned long int position4;
+	fgetpos(lvlFile, &position4);
+	fprintf(stderr, "powerSys at %ld\n", position4);
+	if (episodeNum <= 3)
+	fseek(lvlFile, 0x26E21, SEEK_SET);
+
 	for (i = 0; i < POWER_NUM + 1; i++)
 	{
 		fseek(lvlFile, 1, SEEK_CUR); /* skip string length */
 		efread(&powerSys[i].name,        1, 30, lvlFile);
 		powerSys[i].name[30] = '\0';
+		fprintf(stderr, "--%s-- \n", powerSys[i].name);
 		efread(&powerSys[i].itemgraphic, sizeof(JE_word), 1, lvlFile);
 		efread(&powerSys[i].power,       sizeof(JE_shortint), 1, lvlFile);
 		efread(&powerSys[i].speed,       sizeof(JE_byte), 1, lvlFile);
 		efread(&powerSys[i].cost,        sizeof(JE_word), 1, lvlFile);
 	}
 
+	fprintf(stderr, "printing SHIPS\n\n");
+
+	unsigned long int position5;
+	fgetpos(lvlFile, &position5);
+	fprintf(stderr, "ships at %ld\n", position5);
+	if (episodeNum <= 3)
+	fseek(lvlFile, 0x26F24, SEEK_SET);
+
 	for (i = 0; i < SHIP_NUM + 1; i++)
 	{
 		fseek(lvlFile, 1, SEEK_CUR); /* skip string length */
 		efread(&ships[i].name,           1, 30, lvlFile);
 		ships[i].name[30] = '\0';
+		fprintf(stderr, "--%s-- \n", ships[i].name);
 		efread(&ships[i].shipgraphic,    sizeof(JE_word), 1, lvlFile);
 		efread(&ships[i].itemgraphic,    sizeof(JE_word), 1, lvlFile);
 		efread(&ships[i].ani,            sizeof(JE_byte), 1, lvlFile);
@@ -147,11 +189,20 @@ void JE_loadItemDat( void )
 		efread(&ships[i].bigshipgraphic, sizeof(JE_byte), 1, lvlFile);
 	}
 
+	fprintf(stderr, "printing OPTIONS\n\n");
+
+	unsigned long int position6;
+	fgetpos(lvlFile, &position6);
+	fprintf(stderr, "options at %ld\n", position6);
+	if (episodeNum <= 3)
+	fseek(lvlFile, 0x2722F, SEEK_SET);
+
 	for (i = 0; i < OPTION_NUM + 1; i++)
 	{
 		fseek(lvlFile, 1, SEEK_CUR); /* skip string length */
 		efread(&options[i].name,        1, 30, lvlFile);
 		options[i].name[30] = '\0';
+		fprintf(stderr, "--%s-- \n", options[i].name);
 		efread(&options[i].pwr,         sizeof(JE_byte), 1, lvlFile);
 		efread(&options[i].itemgraphic, sizeof(JE_word), 1, lvlFile);
 		efread(&options[i].cost,        sizeof(JE_word), 1, lvlFile);
@@ -167,16 +218,33 @@ void JE_loadItemDat( void )
 		efread(&options[i].icongr,      sizeof(JE_byte), 1, lvlFile);
 	}
 
+	fprintf(stderr, "printing SHIELDS\n\n");
+
+	unsigned long int position7;
+	fgetpos(lvlFile, &position7);
+	fprintf(stderr, "weaponport at %ld\n", position7);
+	if (episodeNum <= 3)
+	fseek(lvlFile, 0x27EF3, SEEK_SET);
+
 	for (i = 0; i < SHIELD_NUM + 1; i++)
 	{
 		fseek(lvlFile, 1, SEEK_CUR); /* skip string length */
 		efread(&shields[i].name,        1, 30, lvlFile);
 		shields[i].name[30] = '\0';
+		fprintf(stderr, "--%s-- \n", shields[i].name);
 		efread(&shields[i].tpwr,        sizeof(JE_byte), 1, lvlFile);
 		efread(&shields[i].mpwr,        sizeof(JE_byte), 1, lvlFile);
 		efread(&shields[i].itemgraphic, sizeof(JE_word), 1, lvlFile);
 		efread(&shields[i].cost,        sizeof(JE_word), 1, lvlFile);
 	}
+
+/*	int k = 0;		USED FOR REVERSING
+	do
+	{
+		k++;
+		efread(array, 101*sizeof(JE_byte), 1, lvlFile);
+		fprintf(stderr, "%d read ---%x---\n", k, array);
+	}while( !feof(lvlFile) );*/
 
 	for (i = 0; i < ENEMY_NUM + 1; i++)
 	{

@@ -24,14 +24,14 @@
 
 #define EVENT_MAXIMUM 2500
 
-#define WEAP_NUM    780
-#define PORT_NUM    42
+#define WEAP_NUM    818
+#define PORT_NUM    60
 #define ARMOR_NUM   4
 #define POWER_NUM   6
 #define ENGINE_NUM  6
-#define OPTION_NUM  30
-#define SHIP_NUM    13
-#define SHIELD_NUM  10
+#define OPTION_NUM  37
+#define SHIP_NUM    18
+#define SHIELD_NUM  11
 #define SPECIAL_NUM 46
 
 #define ENEMY_NUM   850

@@ -86,6 +86,7 @@ void JE_newLoadShapes( JE_byte table, char *shapefile )
 	
 	JE_newPurgeShapes(table);
 	
+	printf("reading %s file newshape.c\n", shapefile);
 	JE_resetFile(&f, shapefile);
 	
 	JE_newLoadShapesB(table, f);

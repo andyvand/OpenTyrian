@@ -149,7 +149,7 @@ void JE_rectangle( JE_word a, JE_word b, JE_word c, JE_word d, JE_word e ) /* x1
 			vga[i] = e;
 		}
 	} else {
-		printf("!!! WARNING: Rectangle clipped: %d %d %d %d %d\n", a, b, c, d, e);
+		//printf("!!! WARNING: Rectangle clipped: %d %d %d %d %d\n", a, b, c, d, e);
 	}
 }
 
@@ -168,7 +168,7 @@ void JE_bar( JE_word a, JE_word b, JE_word c, JE_word d, JE_byte e ) /* x1, y1, 
 			memset(&vga[i], e, width);
 		}
 	} else {
-		printf("!!! WARNING: Filled Rectangle clipped: %d %d %d %d %d\n", a, b, c, d, e);
+		//printf("!!! WARNING: Filled Rectangle clipped: %d %d %d %d %d\n", a, b, c, d, e);
 	}
 }
 
@@ -187,7 +187,7 @@ void JE_c_bar( JE_word a, JE_word b, JE_word c, JE_word d, JE_byte e )
 			memset(&vga[i], e, width);
 		}
 	} else {
-		printf("!!! WARNING: Filled Rectangle clipped: %d %d %d %d %d\n", a,b,c,d,e);
+		//printf("!!! WARNING: Filled Rectangle clipped: %d %d %d %d %d\n", a,b,c,d,e);
 	}
 }
 
@@ -209,7 +209,7 @@ void JE_barShade( JE_word a, JE_word b, JE_word c, JE_word d ) /* x1, y1, x2, y2
 			}
 		}
 	} else {
-		printf("!!! WARNING: Darker Rectangle clipped: %d %d %d %d\n", a,b,c,d);
+		//printf("!!! WARNING: Darker Rectangle clipped: %d %d %d %d\n", a,b,c,d);
 	}
 }
 
@@ -247,7 +247,7 @@ void JE_barBright( JE_word a, JE_word b, JE_word c, JE_word d ) /* x1, y1, x2, y
 			}
 		}
 	} else {
-		printf("!!! WARNING: Brighter Rectangle clipped: %d %d %d %d\n", a,b,c,d);
+		//printf("!!! WARNING: Brighter Rectangle clipped: %d %d %d %d\n", a,b,c,d);
 	}
 }
 

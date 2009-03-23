@@ -31,9 +31,10 @@ void JE_analyzeLevel( void )
 {
 	JE_word x;
 	FILE *f;
-
+	
 	JE_resetFile(&f, levelFile);
 	efread(&lvlNum, sizeof(JE_word), 1, f);
+	printf("reading %s in lvlib.c\n", levelFile);
 	for (x = 0; x < lvlNum; x++)
 	{
 		efread(&lvlPos[x], sizeof(JE_longint), 1, f);
