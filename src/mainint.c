@@ -456,7 +456,7 @@ void JE_loadMainShapeTables( char *shpfile )
     printf("offset 1 at %x\n",shpPos[0]);
     for(int slot = 1;slot<=shpNumb+1;slot++){ // debug printing for offsets
     printf("slot %d is %ld bytes long\n",slot,shpPos[slot]-shpPos[slot-1]);
-    printf("offset %d at %x",slot,shpPos[slot]);
+    printf("offset %d at %x\n",slot,shpPos[slot]);
     }
 	
 	int i;
