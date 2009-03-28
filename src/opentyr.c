@@ -171,8 +171,7 @@ void opentyrian_menu( void )
 
 	JE_showVGA();
 
-	if (currentJukeboxSong == 0) currentJukeboxSong = 37; /* A Field for Mag */
-	JE_playSong(currentJukeboxSong);
+	play_song(36); // A Field for Mag
 	
 	do
 	{
@@ -260,18 +259,22 @@ void opentyrian_menu( void )
 					{
 						case 0: /* About */
 							JE_playSampleNum(SELECT);
+							
 							scroller_sine(about_text);
+							
 							memcpy(VGAScreen->pixels, VGAScreen2->pixels, VGAScreen->pitch * VGAScreen->h);
 							JE_showVGA();
 							fade_in = true;
 							break;
 						case 1: /* Fullscreen */
 							JE_playSampleNum(SELECT);
+							
 							fullscreen_enabled = !fullscreen_enabled;
 							reinit_video();
 							break;
 						case 2: /* Scaler */
 							JE_playSampleNum(SELECT);
+							
 							if (scaler != temp_scaler)
 							{
 								scaler = temp_scaler;
@@ -280,7 +283,10 @@ void opentyrian_menu( void )
 							break;
 						case 3: /* Jukebox */
 							JE_playSampleNum(SELECT);
-							JE_jukeboxGo();
+							
+							JE_fadeBlack(10);
+							jukebox();
+							
 							memcpy(VGAScreen->pixels, VGAScreen2->pixels, VGAScreen->pitch * VGAScreen->h);
 							JE_showVGA();
 							fade_in = true;
@@ -381,31 +387,19 @@ int main( int argc, char *argv[] )
 	showMemLeft = false;
 	playerPasswordInput = true;
 
-	printf("Initializing SDL audio...\n");
-	JE_loadSong(1);
-
-	if (!noSound)
+	if (!audio_disabled)
 	{
-		/* SYN: This code block doesn't really resemble the original, because the
-		    underlying sound code is very different. I've left out some stuff that
-		    checked hardware values and stuff here. */
-
-		JE_initialize();
-
-		soundEffects = true; /* TODO: find a real way to give this a value */
-		if (soundEffects)
-		{
-			JE_multiSampleInit(0, 0, 0, 0); /* TODO: Fix arguments */
-
-			/* I don't think these messages matter, but I'll replace them with more useful stuff if I can. */
-			/*if (soundEffects == 2) printf("SoundBlaster active");
-			printf ("DSP Version ***\n");
-			printf ("SB port ***\n");
-			printf ("Interrupt ***\n");*/
-
-			JE_loadSndFile("tyrian.snd", xmas ? "voicesc.snd" : "voices.snd");
-		}
-
+		printf("initializing SDL audio...\n");
+		
+		init_audio();
+		
+		load_music();
+		
+		JE_loadSndFile("tyrian.snd", xmas ? "voicesc.snd" : "voices.snd");
+	}
+	else
+	{
+		printf("audio disabled\n");
 	}
 
 	if (recordDemo)

@@ -21,9 +21,10 @@
 
 #include "opentyr.h"
 
+extern bool playing, songlooped;
 
 int lds_update( void );
-int lds_load( JE_byte * );
+bool lds_load( FILE *f, unsigned int music_offset, unsigned int music_size );
 void lds_free( void );
 void lds_rewind( int ); /* default value: subsong = -1 */
 

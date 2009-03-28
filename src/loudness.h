@@ -38,40 +38,25 @@
 #define SAMPLE_TYPE OPLSAMPLE
 #define BYTES_PER_SAMPLE (OPL_SAMPLE_BITS / 8)
 
-typedef JE_byte JE_MusicType[20000];
-
-extern JE_MusicType musicData;
-extern JE_boolean repeated;
-extern JE_boolean playing;
-
 extern float sample_volume;
 extern float music_volume;
 
-void JE_initialize( void );
-void JE_deinitialize( void );
+extern unsigned int song_playing;
 
-void JE_play( void );
+extern bool audio_disabled;
 
-/* SYN: selectSong is called with 0 to disable the current song. Calling it with 1 will start the current song if not playing,
-   or restart it if it is. */
-void JE_selectSong( JE_word value );
+bool init_audio( void );
+void deinit_audio( void );
 
-/* TODO: Some of these procs take segment and offset or other weird arguments, the signature of many of these may change
-   as I make stuff more "sensible" */
+void load_music( void );
+void play_song( unsigned int song_num );
+void restart_song( void );
+void stop_song( void );
+void fade_song( void );
 
-void JE_samplePlay(JE_word addlo, JE_word addhi, JE_word size, JE_word freq);
-void JE_bigSamplePlay(JE_word addlo, JE_word addhi, JE_word size, JE_word freq);
-JE_word JE_sampleStatus(JE_byte chan);
-	
-void JE_multiSampleInit(JE_word addlo, JE_word addhi, JE_word dmalo, JE_word dmahi);
-void JE_multiSampleMix( void );
-/* void JE_multiSamplePlay(JE_word addlo, JE_word addhi, JE_word size, JE_byte chan, JE_byte vol); */
 void JE_multiSamplePlay(JE_byte *buffer, JE_word size, JE_byte chan, JE_byte vol);
 
 void JE_setVol(JE_word volume, JE_word sample);
-
-JE_word JE_getVol( void );
-JE_word JE_getSampleVol( void );
 
 #endif /* LOUDNESS_H */
 

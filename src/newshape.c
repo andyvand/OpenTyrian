@@ -156,7 +156,7 @@ void blit_shape( SDL_Surface *surface, int x, int y, unsigned int table, unsigne
 		}
 		if (*data == 254 || x_offset >= width)
 		{
-			pixels += tempScreenSeg->pitch - x_offset;
+			pixels += surface->pitch - x_offset;
 			x_offset = 0;
 			y_offset++;
 		}
@@ -209,7 +209,7 @@ void blit_shape_blend( SDL_Surface *surface, int x, int y, unsigned int table, u
 		}
 		if (*data == 254 || x_offset >= width)
 		{
-			pixels += tempScreenSeg->pitch - x_offset;
+			pixels += surface->pitch - x_offset;
 			x_offset = 0;
 			y_offset++;
 		}
@@ -266,7 +266,7 @@ void blit_shape_hv_unsafe( SDL_Surface *surface, int x, int y, unsigned int tabl
 		}
 		if (*data == 254 || x_offset >= width)
 		{
-			pixels += tempScreenSeg->pitch - x_offset;
+			pixels += surface->pitch - x_offset;
 			x_offset = 0;
 			y_offset++;
 		}
@@ -327,7 +327,7 @@ void blit_shape_hv( SDL_Surface *surface, int x, int y, unsigned int table, unsi
 		}
 		if (*data == 254 || x_offset >= width)
 		{
-			pixels += tempScreenSeg->pitch - x_offset;
+			pixels += surface->pitch - x_offset;
 			x_offset = 0;
 			y_offset++;
 		}
@@ -388,7 +388,7 @@ void blit_shape_hv_blend( SDL_Surface *surface, int x, int y, unsigned int table
 		}
 		if (*data == 254 || x_offset >= width)
 		{
-			pixels += tempScreenSeg->pitch - x_offset;
+			pixels += surface->pitch - x_offset;
 			x_offset = 0;
 			y_offset++;
 		}
@@ -441,7 +441,7 @@ void blit_shape_dark( SDL_Surface *surface, int x, int y, unsigned int table, un
 		}
 		if (*data == 254 || x_offset >= width)
 		{
-			pixels += tempScreenSeg->pitch - x_offset;
+			pixels += surface->pitch - x_offset;
 			x_offset = 0;
 			y_offset++;
 		}

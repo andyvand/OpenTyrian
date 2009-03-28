@@ -53,9 +53,6 @@ const char hexa[17] = "0123456789ABCDEF";
 Uint32 target, target2;
 JE_boolean mixEnable = false;
 JE_boolean notYetLoadedSound = true;
-JE_boolean notYetLoadedMusic = true;
-
-JE_SongPosType songPos;
 
 JE_byte soundEffects = 1; /* TODO: Give this a real value, figure out what they mean. */
 
@@ -130,33 +127,6 @@ void wait_delayorinput( JE_boolean keyboard, JE_boolean mouse, JE_boolean joysti
 	}
 }
 
-void JE_loadSong( JE_word songnum )
-{
-	JE_word x;
-	FILE *fi, *test;
-
-	JE_resetFile(&fi, "music.mus");
-
-	if (notYetLoadedMusic)
-	{
-		/* SYN: We're loading offsets into MUSIC.MUS for each song here. */
-		notYetLoadedMusic = false;
-		efread(&x, sizeof(x), 1, fi);
-		efread(songPos, sizeof(JE_longint), sizeof(songPos) / sizeof(JE_longint), fi); /* SYN: reads long int (i.e. 4) * MUSICNUM */
-		fseek(fi, 0, SEEK_END);
-		songPos[MUSIC_NUM] = ftell(fi); /* Store file size */
-	}
-
-	/* SYN: Now move to the start of the song we want, and load the number of bytes given by the
-	   difference in offsets between it and the next song. */
-	fseek(fi, songPos[songnum - 1], SEEK_SET);
-	efread(&musicData, 1, songPos[songnum] - songPos[songnum - 1], fi);
-
-	/* currentSong = songnum; */
-
-	fclose(fi);
-}
-
 void JE_loadSndFile( char *effects_sndfile, char *voices_sndfile )
 {
 	FILE *fi;
@@ -217,62 +187,6 @@ void JE_loadSndFile( char *effects_sndfile, char *voices_sndfile )
 
 	notYetLoadedSound = false;
 
-}
-
-void JE_playSong( JE_word songnum )
-{
-	/* If sound is disabled, bail out */
-	if (noSound)
-		return;
-	
-#ifndef NDEBUG
-	printf("Loading song number %d...\n", songnum);
-#endif
-	
-	if (songnum == 0) /* SYN: Trying to play song 0 was doing strange things D: */
-	{
-		JE_stopSong();
-		currentSong = 0;
-		return;
-	}
-	if (currentSong != songnum && musicActive) /* Original also checked for midiport > 1 */
-	{
-		/*ASM
-		IN   al, $21
-		push ax
-		OR   al, 3
-		out  $21, al
-		END;*/
-
-		JE_stopSong();
-		currentSong = songnum;
-		JE_loadSong (songnum);
-		repeated = false;
-		playing = true;
-		JE_selectSong (1);
-		//JE_waitRetrace();  didn't do anything anyway?
-
-		/*ASM
-		mov al, $36
-		out $43, al
-		mov ax, speed
-		out $40, al
-		mov al, ah
-		out $40, al
-		pop ax
-		out $21, al
-		END;*/
-	}
-}
-
-void JE_stopSong( void )
-{
-	JE_selectSong(0);
-}
-
-void JE_restartSong( void )
-{
-	JE_selectSong(2);
 }
 
 void JE_playSampleNum( JE_byte samplenum )

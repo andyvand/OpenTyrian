@@ -29,6 +29,7 @@
 #include "helptext.h"
 #include "joystick.h"
 #include "keyboard.h"
+#include "lds_play.h"
 #include "loudness.h"
 #include "menus.h"
 #include "mtrand.h"
@@ -190,7 +191,9 @@ void JE_helpSystem( JE_byte startTopic )
 
 	JE_fadeBlack(10);
 	JE_loadPic(2, false);
-	JE_playSong(SONG_MAPVIEW);
+	
+	play_song(SONG_MAPVIEW);
+	
 	JE_showVGA();
 	JE_fadeColor(10);
 
@@ -861,7 +864,7 @@ void JE_nextEpisode( void )
 	mainLevel = FIRST_LEVEL;
 	saveLevel = FIRST_LEVEL;
 	
-	JE_playSong(27);
+	play_song(26);
 	
 	JE_clr256();
 	memcpy(colors, palettes[6-1], sizeof(colors));
@@ -1352,9 +1355,7 @@ JE_boolean JE_inGameSetup( void )
 							if (!musicActive)
 							{
 								musicActive = true;
-								temp = currentSong;
-								currentSong = 0;
-								JE_playSong(temp);
+								restart_song();
 							}
 							break;
 						case 2:
@@ -1391,9 +1392,7 @@ JE_boolean JE_inGameSetup( void )
 							if (!musicActive)
 							{
 								musicActive = true;
-								temp = currentSong;
-								currentSong = 0;
-								JE_playSong(temp);
+								restart_song();
 							}
 							break;
 						case 2:
@@ -1604,7 +1603,7 @@ void JE_highScoreCheck( void )
 				JE_showVGA();
 				memcpy(colors, palettes[1-1], sizeof(colors));
 				
-				JE_playSong(34);
+				play_song(33);
 				
 				/* Enter Thy name */
 				quit = false;
@@ -1679,7 +1678,7 @@ void JE_highScoreCheck( void )
 					} while (!newkey && !newmouse);
 					
 					if (!playing)
-						JE_playSong(32);
+						play_song(31);
 					
 					if (mouseButton > 0)
 					{
@@ -2109,8 +2108,8 @@ void JE_playCredits( void )
 	
 	setjasondelay2(1000);
 	
-	if (currentSong != 9)
-		JE_playSong(9);
+	play_song(8);
+	
 	JE_resetFile(&f, "tyrian.cdt");
 	while (!feof(f))
 	{
@@ -2238,14 +2237,15 @@ void JE_playCredits( void )
 		if (JE_anyButton())
 		{
 			x = maxlen - 1;
-		} else {
+		}
+		else
+		{
 			if (newpos == maxlines - 8)
-				JE_selectSong(0xC001);
+				fade_song();
 			if (x == maxlen - 1)
 			{
 				x--;
-				if (currentSong != 10)
-					JE_playSong(10);
+				play_song(9);
 			}
 		}
 	}
@@ -2297,7 +2297,7 @@ void JE_endLevelAni( void )
 	if (!levelTimer || levelTimerCountdown > 0 || !(episodeNum == 4))
 		JE_playSampleNum(V_LEVEL_END);
 	else
-		JE_playSong(22);
+		play_song(21);
 	  
 	if (bonusLevel)
 	{
@@ -2909,10 +2909,12 @@ void JE_mainKeyboardInput( void )
 		if (musicActive)
 		{
 			JE_drawTextWindow(miscText[36]);
-			JE_selectSong(2);
-		} else {
+			restart_song();
+		}
+		else
+		{
 			JE_drawTextWindow(miscText[35]);
-			JE_stopSong();
+			stop_song();
 		}
 	}
 
@@ -2970,8 +2972,7 @@ void JE_mainKeyboardInput( void )
 		/* {IN-GAME RANDOM MUSIC SELECTION} */
 		if (keysactive[SDLK_SCROLLOCK])
 		{
-			tempW = (mt_rand() % MUSIC_NUM)+1;
-			JE_playSong(tempW);
+			play_song(mt_rand() % MUSIC_NUM);
 		}
 	}
 }
@@ -4658,7 +4659,7 @@ void JE_playerCollide( JE_integer *PX_, JE_integer *PY_, JE_integer *lastTurn_, 
 				} else if (tempI4 > 10000 && enemyAvail[z] == 2) {
 					if (!bonusLevel)
 					{
-						JE_playSong(31);  /*Zanac*/
+						play_song(30);  /*Zanac*/
 						bonusLevel = true;
 						nextLevel = tempI4 - 10000;
 						enemyAvail[z] = 1;

@@ -28,6 +28,7 @@
 #include "helptext.h"
 #include "joystick.h"
 #include "keyboard.h"
+#include "lds_play.h"
 #include "loudness.h"
 #include "lvllib.h"
 #include "lvlmast.h"
@@ -774,19 +775,15 @@ void JE_main( void )
 	   the loadmap function. */
 
 start_level:
-
+	
 	if (galagaMode)
-	{
 		twoPlayerMode = false;
-	}
-
+	
 	if (playDemo)
-	{
-		JE_selectSong(0);
-	}
-
+		stop_song();
+	
 	JE_clearKeyboard();
-
+	
 	if (eShapes1 != NULL)
 	{
 		free(eShapes1);
@@ -838,10 +835,13 @@ start_level:
 		{
 			mainLevel = nextLevel;
 			JE_endLevelAni();
-			JE_selectSong(0xC001);  /*Fade song out*/
-		} else {
-			JE_selectSong(0xC001);  /*Fade song out*/
-
+			
+			fade_song();
+		}
+		else
+		{
+			fade_song();
+			
 			JE_fadeBlack(10);
 			if (twoPlayerMode)
 			{
@@ -881,8 +881,9 @@ start_level_first:
 
 	doNotSaveBackup = false;
 	JE_loadMap();
-	JE_selectSong(0xC001); /*Fade song out*/
-
+	
+	fade_song();
+	
 	playerAlive = true;
 	playerAliveB = true;
 	oldDifficultyLevel = difficultyLevel;
@@ -1081,7 +1082,7 @@ start_level_first:
 	flashChange = 1;
 	displayTime = 0;
 
-	JE_playSong(levelSong);
+	play_song(levelSong - 1);
 
 	JE_drawPortConfigButtons();
 
@@ -1287,14 +1288,12 @@ level_loop:
 
 	if (!allPlayersGone && levelEnd > 0 && endLevel)
 	{
-		JE_playSong(10);
+		play_song(9);
 		musicFade = false;
-	} else {
-		if (!playing && musicActive && firstGameOver)
-		{
-			JE_playSong(levelSong);
-			playing = true;
-		}
+	}
+	else if (!playing && firstGameOver)
+	{
+		play_song(levelSong - 1);
 	}
 
 
@@ -2591,7 +2590,7 @@ explosion_draw_overflow:
 				{
 					if (!playDemo)
 					{
-						JE_playSong(SONG_GAMEOVER);
+						play_song(SONG_GAMEOVER);
 						JE_setVol(tyrMusicVolume, fxVolume);
 					}
 					firstGameOver = false;
@@ -2891,7 +2890,6 @@ new_game:
 		do
 		{
 			JE_resetFile(&lvlFile, macroFile);
-			printf("reading %s file tyrian2.c\n", macroFile);
 
 			x = 0;
 			jumpSection = false;
@@ -3058,7 +3056,7 @@ new_game:
 
 							case 'i':
 								temp = atoi(strnztcpy(buffer, s + 3, 3));
-								songBuy = temp;
+								songBuy = temp - 1;
 								break;
 							case 'I': /*Load Items Available Information*/
 
@@ -3464,9 +3462,9 @@ new_game:
 
 							case 'M':
 								temp = atoi(strnztcpy(buffer, s + 3, 3));
-								JE_playSong(temp);
+								play_song(temp - 1);
 								break;
-							
+							#ifdef TYRIAN2000
 							case 'T':
 								/* TODO: Timed Battle ]T[ 43 44 45 46 47 */
 								printf("]T[ 43 44 45 46 47 handle timed battle!");
@@ -3476,7 +3474,7 @@ new_game:
 								/* TODO: Timed Battle end */
 								printf("handle timed battle end flag!");
 								break;
-								
+							#endif
 						}
 					break;
 				}
@@ -3822,7 +3820,7 @@ void JE_titleScreen( JE_boolean animate )
 			/* Animate instead of quickly fading in */
 			if (redraw)
 			{
-				if (currentSong != SONG_TITLE) JE_playSong(SONG_TITLE);
+				play_song(SONG_TITLE);
 				
 				menu = 0;
 				redraw = false;
@@ -3996,7 +3994,7 @@ void JE_titleScreen( JE_boolean animate )
 							char buf[10+1+15+1];
 							snprintf(buf, sizeof(buf), "%s %s", miscTextB[4], pName[0]);
 							JE_dString(JE_fontCenter(buf, FONT_SHAPES), 110, buf, FONT_SHAPES);
-							JE_playSong(17);
+							play_song(16);
 							JE_playSampleNum(35);
 							JE_showVGA();
 							
@@ -5231,11 +5229,7 @@ void JE_eventSystem( void )
 		case 35: /* Play new song */
 			if (firstGameOver)
 			{
-				JE_playSong(eventRec[eventLoc-1].eventdat);
-				if (!musicActive)
-				{
-					JE_selectSong (0);
-				}
+				play_song(eventRec[eventLoc-1].eventdat - 1);
 				JE_setVol(tyrMusicVolume, fxVolume);
 			}
 			musicFade = false;
@@ -5727,7 +5721,7 @@ void JE_itemScreen( void )
 	first = true;
 	refade = false;
 
-	JE_playSong(songBuy);
+	play_song(songBuy);
 
 	JE_loadPic(1, false);
 	
@@ -6737,51 +6731,38 @@ item_screen_start:
 					if (!musicActive)
 					{
 						musicActive = true;
-						temp = currentSong;
-						currentSong = 0;
-						JE_playSong(temp);
+						restart_song();
 					}
 
 					curSel[2] = 4;
 					temp = (mouseX - 221) / 4 * 12;
 
 					if (abs(tyrMusicVolume - temp) < 12)
-					{
 						tyrMusicVolume = temp;
-					} else {
-						if (tyrMusicVolume < temp)
-						{
-							tyrMusicVolume += 12;
-						} else {
-							tyrMusicVolume -= 12;
-						}
-					}
+					else if (tyrMusicVolume < temp)
+						tyrMusicVolume += 12;
+					else
+						tyrMusicVolume -= 12;
+					
 					tempB = false;
 				}
-
+				
 				if ((mouseX >= 221) && (mouseX <= 303) && (mouseY >= 86) && (mouseY <= 98))
 				{
 					soundActive = true;
 					curSel[2] = 5;
 					temp = (mouseX - 221) / 4 * 12;
 					if (abs(fxVolume - temp) < 12)
-					{
 						fxVolume = temp;
-					} else {
-						if (fxVolume < temp)
-						{
-							fxVolume += 12;
-						} else {
-							fxVolume -= 12;
-						}
-					}
+					else if (fxVolume < temp)
+						fxVolume += 12;
+					else
+						fxVolume -= 12;
 				}
-
+				
 				if (fxVolume > 254)
-				{
 					fxVolume = 254;
-				}
-
+				
 				JE_calcFXVol();
 				JE_setVol(tyrMusicVolume, fxVolume); /* NOTE: MXD killed this because it was broken */
 				JE_playSampleNum(CURSOR_MOVE);
@@ -6975,7 +6956,7 @@ item_screen_start:
 						JE_helpSystem(2);
 						JE_fadeBlack(10);
 
-						JE_playSong(songBuy);
+						play_song(songBuy);
 
 						JE_loadPic(1, false);
 						newPal = 1;
@@ -7158,9 +7139,7 @@ item_screen_start:
 							if (!musicActive)
 							{
 								musicActive = true;
-								temp = currentSong;
-								currentSong = 0;
-								JE_playSong(temp);
+								restart_song();
 							}
 							break;
 						case 5:
@@ -7262,9 +7241,7 @@ item_screen_start:
 							if (!musicActive)
 							{
 								musicActive = true;
-								temp = currentSong;
-								currentSong = 0;
-								JE_playSong(temp);
+								restart_song();
 							}
 							break;
 						case 5:
