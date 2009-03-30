@@ -101,15 +101,15 @@ void JE_loadItemDat( void )
 		efread(&weapons[i].trail,           sizeof(JE_byte), 1, lvlFile);
 		efread(&weapons[i].shipblastfilter, sizeof(JE_byte), 1, lvlFile);
 	}
-	
+
 	fprintf(stderr, "printing WEAPONPORT\n");
 
 	unsigned long int position2;
 	fgetpos(lvlFile, &position2);
 	fprintf(stderr, "weaponPort at %ld\n", position2);
 	if (episodeNum <= 3) fseek(lvlFile, 0x252A4, SEEK_SET);
-	if (episodeNum = 4) fseek(lvlFile, 0xC1F5E, SEEK_SET);
-	if (episodeNum = 5) fseek(lvlFile, 0x5C5B8, SEEK_SET);
+	if (episodeNum == 4) fseek(lvlFile, 0xC1F5E, SEEK_SET);
+	if (episodeNum == 5) fseek(lvlFile, 0x5C5B8, SEEK_SET);
 
 	for (i = 0; i < PORT_NUM + 1; i++)
 	{
@@ -133,10 +133,13 @@ void JE_loadItemDat( void )
 	fgetpos(lvlFile, &position3);
 	fprintf(stderr, "special at %ld\n", position3);
 	if (episodeNum <= 3) fseek(lvlFile, 0x2662E, SEEK_SET);
-	if (episodeNum = 4) fseek(lvlFile, 0xC32E8, SEEK_SET);
-	if (episodeNum = 5) fseek(lvlFile, 0x5D942, SEEK_SET);
+	if (episodeNum == 4) fseek(lvlFile, 0xC32E8, SEEK_SET);
+	if (episodeNum == 5) fseek(lvlFile, 0x5D942, SEEK_SET);
 
-	for (i = 0; i < SPECIAL_NUM + 1; i++)
+	int numbspecials = SPECIAL_NUM;
+	if (episodeNum >= 4 ) numbspecials = SPECIAL_NUM + 8;
+
+	for (i = 0; i < numbspecials + 1; i++)
 	{
 		fseek(lvlFile, 1, SEEK_CUR); /* skip string length */
 		efread(&special[i].name,        1, 30, lvlFile);
@@ -154,8 +157,8 @@ void JE_loadItemDat( void )
 	fgetpos(lvlFile, &position4);
 	fprintf(stderr, "powerSys at %ld\n", position4);
 	if (episodeNum <= 3) fseek(lvlFile, 0x26E21, SEEK_SET);
-	if (episodeNum = 4) fseek(lvlFile, 0xC3ADB, SEEK_SET);
-	if (episodeNum = 5) fseek(lvlFile, 0x5E135, SEEK_SET);
+	if (episodeNum == 4) fseek(lvlFile, 0xC3ADB, SEEK_SET);
+	if (episodeNum == 5) fseek(lvlFile, 0x5E135, SEEK_SET);
 
 	for (i = 0; i < POWER_NUM + 1; i++)
 	{
@@ -175,8 +178,8 @@ void JE_loadItemDat( void )
 	fgetpos(lvlFile, &position5);
 	fprintf(stderr, "ships at %ld\n", position5);
 	if (episodeNum <= 3) fseek(lvlFile, 0x26F24, SEEK_SET);
-	if (episodeNum = 4) fseek(lvlFile, 0xC3BDE, SEEK_SET);
-	if (episodeNum = 5) fseek(lvlFile, 0x5E238, SEEK_SET);
+	if (episodeNum == 4) fseek(lvlFile, 0xC3BDE, SEEK_SET);
+	if (episodeNum == 5) fseek(lvlFile, 0x5E238, SEEK_SET);
 
 	for (i = 0; i < SHIP_NUM + 1; i++)
 	{
@@ -199,8 +202,8 @@ void JE_loadItemDat( void )
 	fgetpos(lvlFile, &position6);
 	fprintf(stderr, "options at %ld\n", position6);
 	if (episodeNum <= 3) fseek(lvlFile, 0x2722F, SEEK_SET);
-	if (episodeNum = 4) fseek(lvlFile, 0xC3EE9, SEEK_SET);
-	if (episodeNum = 5) fseek(lvlFile, 0x5E543, SEEK_SET);
+	if (episodeNum == 4) fseek(lvlFile, 0xC3EE9, SEEK_SET);
+	if (episodeNum == 5) fseek(lvlFile, 0x5E543, SEEK_SET);
 
 	for (i = 0; i < OPTION_NUM + 1; i++)
 	{
@@ -229,8 +232,8 @@ void JE_loadItemDat( void )
 	fgetpos(lvlFile, &position7);
 	fprintf(stderr, "weaponport at %ld\n", position7);
 	if (episodeNum <= 3) fseek(lvlFile, 0x27EF3, SEEK_SET);
-	if (episodeNum = 4) fseek(lvlFile, 0xC4BAD, SEEK_SET);
-	if (episodeNum = 5) fseek(lvlFile, 0x5F207, SEEK_SET);
+	if (episodeNum == 4) fseek(lvlFile, 0xC4BAD, SEEK_SET);
+	if (episodeNum == 5) fseek(lvlFile, 0x5F207, SEEK_SET);
 
 	for (i = 0; i < SHIELD_NUM + 1; i++)
 	{
