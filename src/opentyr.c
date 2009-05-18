@@ -214,7 +214,7 @@ void opentyrian_menu( void )
 					{
 						sel = maxSel;
 					}
-					JE_playSampleNum(CURSOR_MOVE);
+					JE_playSampleNum(S_CURSOR);
 					break;
 				case SDLK_DOWN:
 					sel++;
@@ -222,7 +222,7 @@ void opentyrian_menu( void )
 					{
 						sel = 0;
 					}
-					JE_playSampleNum(CURSOR_MOVE);
+					JE_playSampleNum(S_CURSOR);
 					break;
 				case SDLK_LEFT:
 					if (sel == 2)
@@ -236,7 +236,7 @@ void opentyrian_menu( void )
 						if (display_surface->format->BitsPerPixel == 8)
 							temp_scaler = 0;
 						else
-							JE_playSampleNum(CURSOR_MOVE);
+							JE_playSampleNum(S_CURSOR);
 					}
 					break;
 				case SDLK_RIGHT:
@@ -251,14 +251,14 @@ void opentyrian_menu( void )
 						if (display_surface->format->BitsPerPixel == 8)
 							temp_scaler = 0;
 						else
-							JE_playSampleNum(CURSOR_MOVE);
+							JE_playSampleNum(S_CURSOR);
 					}
 					break;
 				case SDLK_RETURN:
 					switch (sel)
 					{
 						case 0: /* About */
-							JE_playSampleNum(SELECT);
+							JE_playSampleNum(S_SELECT);
 							
 							scroller_sine(about_text);
 							
@@ -267,13 +267,13 @@ void opentyrian_menu( void )
 							fade_in = true;
 							break;
 						case 1: /* Fullscreen */
-							JE_playSampleNum(SELECT);
+							JE_playSampleNum(S_SELECT);
 							
 							fullscreen_enabled = !fullscreen_enabled;
 							reinit_video();
 							break;
 						case 2: /* Scaler */
-							JE_playSampleNum(SELECT);
+							JE_playSampleNum(S_SELECT);
 							
 							if (scaler != temp_scaler)
 							{
@@ -282,7 +282,7 @@ void opentyrian_menu( void )
 							}
 							break;
 						case 3: /* Jukebox */
-							JE_playSampleNum(SELECT);
+							JE_playSampleNum(S_SELECT);
 							
 							JE_fadeBlack(10);
 							jukebox();
@@ -293,13 +293,13 @@ void opentyrian_menu( void )
 							break;
 						default: /* Return to main menu */
 							quit = true;
-							JE_playSampleNum(ESC);
+							JE_playSampleNum(S_SPRING);
 							break;
 					}
 					break;
 				case SDLK_ESCAPE:
 					quit = true;
-					JE_playSampleNum(ESC);
+					JE_playSampleNum(S_SPRING);
 					return;
 				default:
 					break;
@@ -332,27 +332,10 @@ int main( int argc, char *argv[] )
 
 	JE_scanForEpisodes();
 
-	recordFileNum = 1;
-	playDemoNum = 0;
-	playDemo = false;
-
 	init_video();
 	init_keyboard();
 	init_joysticks();
-	
-	/* TODO: Tyrian originally checked availible memory here. */
-	
-	if (mouseInstalled)
-	{
-		printf("Mouse Detected.   ");
-		if (mouse_threeButton)
-		{
-			printf("Mouse driver reports three buttons.");
-		}
-		printf("\n");
-	} else {
-		printf("No mouse found.\n");
-	}
+	printf("assuming mouse detected\n"); // SDL can't tell us if there isn't one
 	
 	xmas |= xmas_time();
 	if (xmas && (JE_getFileSize("tyrianc.shp") == 0 || JE_getFileSize("voicesc.snd") == 0))
@@ -362,31 +345,24 @@ int main( int argc, char *argv[] )
 		printf("Christmas is missing.\n");
 	}
 	
-	
 	JE_loadPals();
 	JE_loadMainShapeTables(xmas ? "tyrianc.shp" : "tyrian.shp");
 	
 	tempScreenSeg = VGAScreen;
-	
-	
-	if (xmas)
+	if (xmas && !xmas_prompt())
 	{
-		if (!xmas_prompt())
-		{
-			xmas = false;
-			
-			free_main_shape_tables();
-			JE_loadMainShapeTables("tyrian.shp");
-		}
+		xmas = false;
+		
+		free_main_shape_tables();
+		JE_loadMainShapeTables("tyrian.shp");
 	}
 	
 	
 	/* Default Options */
 	youAreCheating = false;
 	smoothScroll = true;
-	showMemLeft = false;
-	playerPasswordInput = true;
-
+	loadDestruct = false;
+	
 	if (!audio_disabled)
 	{
 		printf("initializing SDL audio...\n");
@@ -401,11 +377,9 @@ int main( int argc, char *argv[] )
 	{
 		printf("audio disabled\n");
 	}
-
-	if (recordDemo)
-	{
-		printf("Game will be recorded.\n");
-	}
+	
+	if (record_demo)
+		printf("demo recording enabled (input limited to keyboard)\n");
 
 	megaData1 = malloc(sizeof(*megaData1));
 	megaData2 = malloc(sizeof(*megaData2));
@@ -423,9 +397,6 @@ int main( int argc, char *argv[] )
 			network_tyrian_halt(3, false);
 		}
 	}
-	
-	loadDestruct = false;
-	stoppedDemo = false;
 	
 	JE_main();
 	

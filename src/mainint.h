@@ -53,15 +53,17 @@ JE_boolean JE_inGameSetup( void );
 void JE_inGameHelp( void );
 void JE_sortHighScores( void );
 void JE_highScoreCheck( void );
-void JE_setNewGameVol( void );
 void JE_changeDifficulty( void );
-void JE_doDemoKeys( void );
-void JE_readDemoKeys( void );
+
+bool load_next_demo( void );
+bool replay_demo_keys( void );
+bool read_demo_keys( void );
+
 void JE_SFCodes( JE_byte playerNum_, JE_integer PX_, JE_integer PY_, JE_integer mouseX_, JE_integer mouseY_, JE_PItemsType pItems_ );
 void JE_func( JE_byte col );
 void JE_sort( void );
 
-JE_word JE_powerLevelCost( JE_word base, JE_byte level );
+long weapon_upgrade_cost( long base_cost, unsigned int power );
 JE_longint JE_getCost( JE_byte itemType, JE_word itemNum );
 JE_longint JE_getValue( JE_byte itemType, JE_word itemNum );
 JE_longint JE_totalScore( JE_longint score, JE_PItemsType pitems );

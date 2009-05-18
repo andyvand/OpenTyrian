@@ -49,99 +49,99 @@ JE_word JE_btow(JE_byte a, JE_byte b)
 	return (JE_word) (((short) b) * 256 + a);
 }
 
-//void JE_loadShapeFile( JE_ShapeType *shapes, JE_char s )
-//{
-	//FILE *f;
-	//JE_word x;
-	//JE_boolean active;
+void JE_loadShapeFile( JE_ShapeType *shapes, JE_char s )
+{
+	FILE *f;
+	JE_word x;
+	JE_boolean active;
 
-	//char buffer[12];
-	//sprintf(buffer, "shapes%c.dat", tolower(s));
+	char buffer[12];
+	sprintf(buffer, "shapes%c.dat", tolower(s));
 
-	//JE_resetFile(&f, buffer);
+	JE_resetFile(&f, buffer);
 
-	//for (x = 0; x < 304; x++)
-	//{
-		//active = getc(f);
+	for (x = 0; x < 304; x++)
+	{
+		active = getc(f);
 
-		//if (active)
-		//{
-			//efread((*shapes)[x], sizeof(JE_byte), sizeof(*(*shapes)[x]), f);
-		//} else {
-			//memset((*shapes)[x], 0, sizeof(*(*shapes)[x]));
-		//}
-	//}
+		if (active)
+		{
+			efread((*shapes)[x], sizeof(JE_byte), sizeof(*(*shapes)[x]), f);
+		} else {
+			memset((*shapes)[x], 0, sizeof(*(*shapes)[x]));
+		}
+	}
 
-	//fclose(f);
+	fclose(f);
 
-	//*fprintf(stderr, "Shapes%c completed.\n", s);*/
-//}
+	/*fprintf(stderr, "Shapes%c completed.\n", s);*/
+}
 
-//void JE_loadNewShapeFile( JE_NewShapeType *shapes, JE_char s )
-//{
-	//FILE *f;
-	//JE_word x, y, z;
-	//JE_boolean active;
-	//JE_ShapeTypeOne tempshape;
-	//JE_byte black, color;
+void JE_loadNewShapeFile( JE_NewShapeType *shapes, JE_char s )
+{
+	FILE *f;
+	JE_word x, y, z;
+	JE_boolean active;
+	JE_ShapeTypeOne tempshape;
+	JE_byte black, color;
 
-	//char buffer[12];
-	//sprintf(buffer, "shapes%c.dat", tolower(s));
+	char buffer[12];
+	sprintf(buffer, "shapes%c.dat", tolower(s));
 
-	//JE_resetFile(&f, buffer);
+	JE_resetFile(&f, buffer);
 
-	//for (z = 0; z < 304; z++)
-	//{
-		//active = getc(f);
+	for (z = 0; z < 304; z++)
+	{
+		active = getc(f);
 
-		//if (active)
-		//{
-			//efread(tempshape, sizeof(JE_byte), sizeof(tempshape), f);
+		if (active)
+		{
+			efread(tempshape, sizeof(JE_byte), sizeof(tempshape), f);
 
-			//for (y = 0; y <= 13; y++)
-			//{
+			for (y = 0; y <= 13; y++)
+			{
 
-				//black = 0;
-				//color = 0;
-				//for (x = 0; x <= 11; x++)
-				//{
-					//if (tempshape[x + y * 12] == 0)
-					//{
-						//black++;
-					//} else {
-						//color++;
-					//}
-				//}
+				black = 0;
+				color = 0;
+				for (x = 0; x <= 11; x++)
+				{
+					if (tempshape[x + y * 12] == 0)
+					{
+						black++;
+					} else {
+						color++;
+					}
+				}
 
-				//if (black == 12)
-				//{  /* Compression Value 0 - All black */
-					//(*shapes)[z][y * 13] = 0;
-				//} else {
-					//if (color == 12)
-					//{  /* Compression Value 1 - All color */
-						//(*shapes)[z][y * 13] = 1;
-						//for (x = 0; x <= 11; x++)
-						//{
-							//(*shapes)[z][x + 1 + y * 13] = tempshape[x + y * 12];
-						//}
-					//} else {
-						//(*shapes)[z][y * 13] = 2;
-						//for (x = 0; x <= 11; x++)
-						//{
-							//(*shapes)[z][x + 1 + y * 13] = tempshape[x + y * 12];
-						//}
-					//}
-				//}
-			//}
-		//} else {
-			//memset((*shapes)[z], 0, sizeof((*shapes)[z]));
-		//}
-	//}
+				if (black == 12)
+				{  /* Compression Value 0 - All black */
+					(*shapes)[z][y * 13] = 0;
+				} else {
+					if (color == 12)
+					{  /* Compression Value 1 - All color */
+						(*shapes)[z][y * 13] = 1;
+						for (x = 0; x <= 11; x++)
+						{
+							(*shapes)[z][x + 1 + y * 13] = tempshape[x + y * 12];
+						}
+					} else {
+						(*shapes)[z][y * 13] = 2;
+						for (x = 0; x <= 11; x++)
+						{
+							(*shapes)[z][x + 1 + y * 13] = tempshape[x + y * 12];
+						}
+					}
+				}
+			}
+		} else {
+			memset((*shapes)[z], 0, sizeof((*shapes)[z]));
+		}
+	}
 
-	//fclose(f);
+	fclose(f);
 
-	//*fprintf(stderr, "Shapes%c completed.\n", s);*/
-//}
+	/*fprintf(stderr, "Shapes%c completed.\n", s);*/
+}
 
 void JE_loadCompShapes( JE_byte **shapes, JE_word *shapeSize, JE_char s )
 {

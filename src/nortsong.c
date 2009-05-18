@@ -54,24 +54,15 @@ Uint32 target, target2;
 JE_boolean mixEnable = false;
 JE_boolean notYetLoadedSound = true;
 
-JE_byte soundEffects = 1; /* TODO: Give this a real value, figure out what they mean. */
-
 JE_word frameCount, frameCount2, frameCountMax;
 
-JE_byte currentSong = 0;
-
-JE_byte soundActive = true;
-JE_byte musicActive = true;
-
-JE_byte *digiFx[SOUND_NUM + 9] = { NULL }; /* [1..soundnum + 9] */
-JE_word fxSize[SOUND_NUM + 9]; /* [1..soundnum + 9] */
+JE_byte *digiFx[SAMPLE_COUNT] = { NULL }; /* [1..soundnum + 9] */
+JE_word fxSize[SAMPLE_COUNT]; /* [1..soundnum + 9] */
 
 
-JE_word fxVolume = 128; /* Default value, should be loaded from config */
-JE_word fxPlayVol = (128 - 1) >> 5; /* Same result as calling calcFXVol with default value of fxvolume*/
-
+JE_word tyrMusicVolume, fxVolume;
+JE_word fxPlayVol;
 JE_word tempVolume;
-JE_word tyrMusicVolume;
 
 float jasondelay = 1000.0f / (1193180.0f / 0x4300);
 
@@ -133,7 +124,7 @@ void JE_loadSndFile( char *effects_sndfile, char *voices_sndfile )
 	JE_byte y, z;
 	JE_word x;
 	JE_longint templ;
-	JE_longint sndPos[2][SOUND_NUM + 1]; /* Reindexed by -1, dammit Jason */
+	JE_longint sndPos[2][SAMPLE_COUNT + 1];
 	JE_word sndNum;
 
 	/* SYN: Loading offsets into TYRIAN.SND */
@@ -170,7 +161,7 @@ void JE_loadSndFile( char *effects_sndfile, char *voices_sndfile )
 	fseek(fi, 0, SEEK_END);
 	sndPos[1][sndNum] = ftell(fi); /* Store file size */
 
-	z = SOUND_NUM;
+	z = SAMPLE_COUNT - 9;
 
 	for (y = 0; y < sndNum; y++)
 	{
@@ -191,14 +182,10 @@ void JE_loadSndFile( char *effects_sndfile, char *voices_sndfile )
 
 void JE_playSampleNum( JE_byte samplenum )
 {
-	if (soundEffects > 0 && soundActive)
-	{
-		/* SYN: Reindexing by -1 because of Jason's arrays starting at 1. Dammit. */
-		JE_multiSamplePlay( digiFx[samplenum-1], fxSize[samplenum-1], 0, fxPlayVol );
-	}
+	JE_multiSamplePlay(digiFx[samplenum-1], fxSize[samplenum-1], 0, fxPlayVol);
 }
 
-void JE_calcFXVol( void )
+void JE_calcFXVol( void ) // TODO: not sure *exactly* what this does
 {
 	fxPlayVol = (fxVolume - 1) >> 5;
 }
@@ -213,50 +200,45 @@ void JE_resetTimerInt( void )
 	jasondelay = 1000.0f / (1193180.0f / 0x4300);
 }
 
-void JE_timerInt( void )
+void JE_changeVolume( JE_word *music, int music_delta, JE_word *sample, int sample_delta )
 {
-	STUB();
-}
-
-void JE_changeVolume( JE_word *temp, JE_integer change, JE_word *fxvol, JE_integer fxchange )
-{
-	if (change != 0)
+	int music_temp = *music + music_delta,
+	    sample_temp = *sample + sample_delta;
+	
+	if (music_delta)
 	{
-		if (*temp + change > 254)
+		if (music_temp > 255)
 		{
-			*temp = 256 - change;
-			JE_playSampleNum(WRONG);
+			music_temp = 255;
+			JE_playSampleNum(S_CLINK);
 		}
-		*temp += change;
-		if (*temp < 16)
+		else if (music_temp < 0)
 		{
-			*temp = 16;
-			JE_playSampleNum(WRONG);
+			music_temp = 0;
+			JE_playSampleNum(S_CLINK);
 		}
 	}
 	
-	if (fxchange != 0)
+	if (sample_delta)
 	{
-		if (*fxvol + fxchange > 254)
+		if (sample_temp > 255)
 		{
-			*fxvol = 256 - fxchange;
-			JE_playSampleNum(WRONG);
+			sample_temp = 255;
+			JE_playSampleNum(S_CLINK);
 		}
-		*fxvol += fxchange;
-		if (*fxvol < 16)
+		else if (sample_temp < 0)
 		{
-			*fxvol = 16;
-			JE_playSampleNum(WRONG);
+			sample_temp = 0;
+			JE_playSampleNum(S_CLINK);
 		}
 	}
+	
+	*music = music_temp;
+	*sample = sample_temp;
 	
 	JE_calcFXVol();
-	JE_setVol(*temp, *fxvol); /* NOTE: MXD killed this because it was broken */
-}
-
-void JE_waitFrameCount( void )
-{
-	/* TODO: I'm not sure how long this function should wait. Leaving it blank for now, it doesn't seem to hurt much... */
+	
+	set_volume(*music, *sample);
 }
 
 // kate: tab-width 4; vim: set noet:

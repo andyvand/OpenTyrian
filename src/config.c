@@ -219,6 +219,7 @@ JE_boolean explosionTransparent,
            background2notTransparent,
            tempb;
 
+JE_byte soundEffects; // dummy value for config
 JE_byte versionNum;   /* SW 1.0 and SW/Reg 1.1 = 0 or 1
                        * EA 1.2 = 2 */
 
@@ -226,7 +227,6 @@ JE_byte    fastPlay;
 JE_boolean pentiumMode;
 
 /* Savegame files */
-JE_boolean playerPasswordInput;
 JE_byte    gameSpeed;
 JE_byte    processorType;  /* 1=386 2=486 3=Pentium Hyper */
 
@@ -294,29 +294,22 @@ void JE_saveGame( JE_byte slot, char *name )
 	saveFiles[slot-1].gameHasRepeated = gameHasRepeated;
 	saveFiles[slot-1].level = saveLevel;
 
-	pItems[3-1] = superArcadeMode;
-	if (superArcadeMode == 0 && onePlayerAction)
-	{
-		pItems[3-1] = 255;
-	}
+	pItems[P_SUPERARCADE] = superArcadeMode;
+	if (superArcadeMode == SA_NONE && onePlayerAction)
+		pItems[P_SUPERARCADE] = SA_ARCADE;
 	if (superTyrian)
-	{
-		pItems[3-1] = 254;
-	}
-
+		pItems[P_SUPERARCADE] = SA_SUPERTYRIAN;
+	
 	memcpy(&saveFiles[slot-1].items, &pItems, sizeof(pItems));
-
+	
 	if (superArcadeMode > 253)
-	{
-		pItems[3-1] = 0;
-	}
+		pItems[P_SUPERARCADE] = SA_NONE;
+	
 	if (twoPlayerMode)
-	{
 		memcpy(&saveFiles[slot-1].lastItems, &pItemsPlayer2, sizeof(pItemsPlayer2));
-	} else {
+	else
 		memcpy(&saveFiles[slot-1].lastItems, &pItemsBack2, sizeof(pItemsBack2));
-	}
-
+	
 	saveFiles[slot-1].score  = score;
 	saveFiles[slot-1].score2 = score2;
 	memcpy(&saveFiles[slot-1].levelName, &lastLevelName, sizeof(lastLevelName));
@@ -330,7 +323,9 @@ void JE_saveGame( JE_byte slot, char *name )
 			temp = 4; /* JE: {Episodemax is 4 for completion purposes} */
 		}
 		saveFiles[slot-1].episode = temp;
-	} else {
+	}
+	else
+	{
 		saveFiles[slot-1].episode = episodeNum;
 	}
 
@@ -364,35 +359,41 @@ void JE_loadGame( JE_byte slot )
 	twoPlayerMode     = (slot-1) > 10;
 	difficultyLevel   = saveFiles[slot-1].difficulty;
 	memcpy(&pItems, &saveFiles[slot-1].items, sizeof(pItems));
-	superArcadeMode   = pItems[3-1];
-
-	if (superArcadeMode == 255)
+	superArcadeMode   = pItems[P_SUPERARCADE];
+	
+	if (superArcadeMode == SA_ARCADE)
 	{
 		onePlayerAction = true;
-		superArcadeMode = 0;
-		pItems[3-1] = 0;
-	} else if (superArcadeMode == 254) {
+		superArcadeMode = SA_NONE;
+		pItems[P_SUPERARCADE] = SA_NONE;
+	}
+	else if (superArcadeMode == SA_SUPERTYRIAN)
+	{
 		onePlayerAction = true;
-		superArcadeMode = 0;
-		pItems[3-1] = 0;
 		superTyrian = true;
-	} else if (superArcadeMode > 0) {
+		superArcadeMode = SA_NONE;
+		pItems[P_SUPERARCADE] = SA_NONE;
+	}
+	else if (superArcadeMode != SA_NONE)
+	{
 		onePlayerAction = true;
 	}
-
+	
 	if (twoPlayerMode)
 	{
 		memcpy(&pItemsPlayer2, &saveFiles[slot-1].lastItems, sizeof(pItemsPlayer2));
 		onePlayerAction = false;
-	} else {
+	}
+	else
+	{
 		memcpy(&pItemsBack2, &saveFiles[slot-1].lastItems, sizeof(pItemsBack2));
 	}
 
 	/* Compatibility with old version */
-	if (pItemsPlayer2[7-1] < 101)
+	if (pItemsPlayer2[P2_SIDEKICK_MODE] < 101)
 	{
-		pItemsPlayer2[7-1] = 101;
-		pItemsPlayer2[8-1] = pItemsPlayer2[4-1];
+		pItemsPlayer2[P2_SIDEKICK_MODE] = 101;
+		pItemsPlayer2[P2_SIDEKICK_TYPE] = pItemsPlayer2[P_LEFT_SIDEKICK];
 	}
 
 	score       = saveFiles[slot-1].score;
@@ -730,28 +731,30 @@ void JE_loadConfiguration( void )
 		scaler = temp;
 		
 		fclose(fi);
-	} else {
+	}
+	else
+	{
 		printf("\nInvalid or missing TYRIAN.CFG! Continuing using defaults.\n\n");
 		
 		soundEffects = 1;
 		memcpy(&keySettings, &defaultKeySettings, sizeof(keySettings));
 		background2 = true;
-		tyrMusicVolume = 255;
-		fxVolume = 128;
+		tyrMusicVolume = fxVolume = 128;
 		gammaCorrection = 0;
 		processorType = 3;
 		gameSpeed = 4;
 		
 		fullscreen_enabled = false;
 	}
-
-	tyrMusicVolume = (tyrMusicVolume > 255) ? 255 : tyrMusicVolume;
-	fxVolume = (fxVolume > 254) ? 254 : ((fxVolume < 14) ? 14 : fxVolume);
-
-	soundActive = true;
-	musicActive = true;
-
-	JE_setVol(tyrMusicVolume, fxVolume);
+	
+	if (tyrMusicVolume > 255)
+		tyrMusicVolume = 255;
+	if (fxVolume > 255)
+		fxVolume = 255;
+	
+	JE_calcFXVol();
+	
+	set_volume(tyrMusicVolume, fxVolume);
 	
 	char savfile[1000];
 	snprintf(savfile, sizeof(savfile), "%s" "tyrian.sav", get_user_directory());
@@ -860,8 +863,7 @@ void JE_loadConfiguration( void )
 	}
 
 	errorActive = false;
-
-	JE_calcFXVol();
+	
 	JE_initProcessorType();
 }
 

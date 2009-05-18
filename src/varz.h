@@ -27,6 +27,16 @@
 
 #define SA 7
 
+enum
+{
+	SA_NONE = 0,
+	SA_NORTSHIPZ = 7,
+	SA_DESTRUCT = 8,
+	SA_ENGAGE = 9,
+	SA_SUPERTYRIAN = 254,
+	SA_ARCADE = 255,
+};
+
 #define MAX_PWEAPON     81 /* 81*/
 #define ENEMY_SHOT_MAX  60 /* 60*/
 
@@ -225,14 +235,13 @@ extern const JE_byte superTyrianSpecials[4];
 extern const JE_byte shipCombos[14][3];
 extern JE_byte SFCurrentCode[2][21];
 extern JE_byte SFExecuted[2];
-extern JE_boolean stoppedDemo;
 extern JE_byte lvlFileNum;
 extern JE_word maxEvent, eventLoc;
 extern JE_word tempBackMove, explodeMove;
 extern JE_byte levelEnd;
 extern JE_word levelEndFxWait;
 extern JE_shortint levelEndWarp;
-extern JE_boolean showMemLeft, endLevel, reallyEndLevel, waitToEndLevel, playerEndLevel, normalBonusLevelCurrent, bonusLevelCurrent, smallEnemyAdjust, readyToEndLevel, quitRequested;
+extern JE_boolean endLevel, reallyEndLevel, waitToEndLevel, playerEndLevel, normalBonusLevelCurrent, bonusLevelCurrent, smallEnemyAdjust, readyToEndLevel, quitRequested;
 extern JE_byte newPL[10];
 extern JE_word returnLoc;
 extern JE_boolean returnActive;
@@ -255,14 +264,14 @@ extern struct JE_MegaDataType3 *megaData3;
 extern JE_byte flash;
 extern JE_shortint flashChange;
 extern JE_byte displayTime;
-extern JE_boolean firstEvent;
-extern FILE *recordFile;
-extern JE_word recordFileNum;
-extern JE_byte lastKey[8];
-extern JE_word lastMoveWait, nextMoveWait;
-extern JE_byte nextDemoOperation;
-extern JE_boolean playDemo;
-extern JE_byte playDemoNum;
+
+extern bool play_demo, record_demo, stopped_demo;
+extern Uint8 demo_num;
+extern FILE *demo_file;
+
+extern Uint8 demo_keys, next_demo_keys;
+extern Uint16 demo_keys_wait;
+
 extern JE_byte soundQueue[8];
 extern JE_boolean enemyContinualDamage;
 extern JE_boolean enemiesActive;

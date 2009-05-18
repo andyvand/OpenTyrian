@@ -38,6 +38,7 @@ extern char menuText[7][29]; 			/* [1..7] of string [29] */
 #else
 extern char miscText[68][42];           /* [1..68] of string [41] */
 extern char miscTextB[5][11];           /* [1..5] of string [10] */
+extern char keyName[8][18];             /* [1..8] of string [17] */
 extern char menuText[7][21];            /* [1..7] of string [20] */
 #endif
 extern char outputs[9][31];             /* [1..9] of string [30] */
@@ -56,7 +57,7 @@ extern char networkText[5][33]; 		/* [1..5] of string [32] */
 #else
 extern char networkText[4][21];         /* [1..4] of string [20] */
 #endif
-extern char difficultyNameB[11][21];    /* [1..11] of string [20]*/
+extern char difficultyNameB[11][21];    /* [0..9] of string [20]*/
 extern char joyButtonNames[5][21];      /* [1..5] of string [20] */
 #ifdef TYRIAN2000
 extern char superShips[13][26]; 		/* [0..12] of string [25] */

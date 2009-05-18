@@ -40,6 +40,22 @@
 typedef SDLKey JE_KeySettingType[8]; /* [1..8] */
 typedef JE_byte JE_PItemsType[12]; /* [1..12] */
 
+enum
+{
+	P_FRONT = 0,
+	P_REAR,
+	P_SUPERARCADE,
+	P_LEFT_SIDEKICK,
+	P_RIGHT_SIDEKICK,
+	P_GENERATOR,
+	P2_SIDEKICK_MODE,
+	P2_SIDEKICK_TYPE,
+	P_EPISODE,
+	P_SHIELD,
+	P_SPECIAL,
+	P_SHIP,
+};
+
 typedef JE_byte JE_EditorItemAvailType[100]; /* [1..100] */
 
 typedef struct
@@ -127,7 +143,6 @@ extern JE_boolean superPause, explosionTransparent, youAreCheating, displayScore
 extern JE_byte versionNum;
 extern JE_byte fastPlay;
 extern JE_boolean pentiumMode;
-extern JE_boolean playerPasswordInput;
 extern JE_byte gameSpeed;
 extern JE_byte processorType;
 extern JE_SaveFilesType saveFiles;

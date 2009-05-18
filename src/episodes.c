@@ -56,7 +56,6 @@ void JE_loadItemDat( void )
 {
 	FILE *lvlFile;
 	JE_word itemNum[7]; /* [1..7] */
-	//char array[101];
 
 	int i, j;
 

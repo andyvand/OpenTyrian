@@ -44,8 +44,8 @@ void JE_add( JE_byte nextbyte );
 void JE_endShape( void );
 void JE_startNewShape( void ); */
 
-//void JE_loadShapeFile( JE_ShapeType *shapes, JE_char s );
-//void JE_loadNewShapeFile( JE_NewShapeType *shapes, JE_char s );
+void JE_loadShapeFile( JE_ShapeType *shapes, JE_char s );
+void JE_loadNewShapeFile( JE_NewShapeType *shapes, JE_char s );
 
 void JE_compressShapeFileC( JE_char s );
 void JE_loadCompShapes( JE_byte **shapes, JE_word *shapeSize, JE_char s );
