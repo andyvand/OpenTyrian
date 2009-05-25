@@ -30,11 +30,11 @@
 #include "setup.h"
 #include "video.h"
 
-char episode_name[6][31], difficulty_name[7][21],
+
 #ifdef TYRIAN2000
-gameplay_name[6][26];
+char episode_name[6][31], difficulty_name[7][21],gameplay_name[6][26];
 #else
-gameplay_name[5][26];
+char episode_name[6][31], difficulty_name[7][21], gameplay_name[5][26];
 #endif
 
 bool select_gameplay( void )

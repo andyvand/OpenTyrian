@@ -89,8 +89,6 @@ const JE_word PGR[21] /* [1..21] */ =
 };
 const JE_byte PAni[21] /* [1..21] */ = {1,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1};
 
-const JE_byte pItemButtonMap[7] /* [1..7] */ = {12,1,2,10,6,4,5}; /*Financial Stuff*/
-
 const JE_word linkGunWeapons[38] /* [1..38] */ =
 {
 	0,0,0,0,0,0,0,0,444,445,446,447,0,448,449,0,0,0,0,0,450,451,0,506,0,564,
@@ -211,8 +209,6 @@ JE_word tempSS;
 /* Destruction Ratio */
 JE_word totalEnemy;
 JE_word enemyKilled;
-
-JE_byte statBar[2], statCol[2]; /* [1..2] */
 
 /* Buffer */
 JE_Map1Buffer *map1BufferTop, *map1BufferBot;
@@ -419,7 +415,7 @@ JE_boolean doNotSaveBackup;
 JE_boolean tempSpecial;
 
 JE_word x, y;
-JE_integer a, b, c, d, z, zz;
+JE_integer a, b, c, d, z;
 JE_byte playerNum;
 
 JE_byte **BKwrap1to, **BKwrap2to, **BKwrap3to,

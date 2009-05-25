@@ -41,6 +41,11 @@ void JE_analyzeLevel( void )
 	}
 	fseek(f, 0, SEEK_END);
 	lvlPos[lvlNum] = ftell(f);
+	fprintf(stderr,"results of lvlfile %s analisys :\n",levelFile);
+	for (x = 0; x < lvlNum; x++)
+	{
+		fprintf(stderr,"offset number %d at %X \n", x ,lvlPos[x]);
+	}
 	fclose(f);
 }
 

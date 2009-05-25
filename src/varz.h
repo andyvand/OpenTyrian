@@ -31,8 +31,12 @@ enum
 {
 	SA_NONE = 0,
 	SA_NORTSHIPZ = 7,
+	
+	// only used for code entry
 	SA_DESTRUCT = 8,
 	SA_ENGAGE = 9,
+	
+	// only used in pItems[P_SUPERARCADE]
 	SA_SUPERTYRIAN = 254,
 	SA_ARCADE = 255,
 };
@@ -222,7 +226,6 @@ extern const JE_byte specialArcadeWeapon[PORT_NUM];
 extern const JE_byte optionSelect[16][3][2];
 extern const JE_word PGR[21];
 extern const JE_byte PAni[21];
-extern const JE_byte pItemButtonMap[7];
 extern const JE_word linkGunWeapons[38];
 extern const JE_word chargeGunWeapons[38];
 extern const JE_word linkMultiGr[17];
@@ -256,7 +259,6 @@ extern JE_boolean firstGameOver, gameLoaded, enemyStillExploding;
 extern JE_word tempSS;
 extern JE_word totalEnemy;
 extern JE_word enemyKilled;
-extern JE_byte statBar[2], statCol[2];
 extern JE_Map1Buffer *map1BufferTop, *map1BufferBot;
 extern struct JE_MegaDataType1 *megaData1;
 extern struct JE_MegaDataType2 *megaData2;
@@ -372,7 +374,7 @@ extern JE_word tempW, tempW2, tempW3, tempW4, tempW5, tempOfs;
 extern JE_boolean doNotSaveBackup;
 extern JE_boolean tempSpecial;
 extern JE_word x, y;
-extern JE_integer a, b, c, d, z, zz;
+extern JE_integer a, b, c, d, z;
 extern JE_byte playerNum;
 extern JE_byte **BKwrap1to, **BKwrap2to, **BKwrap3to, **BKwrap1, **BKwrap2, **BKwrap3;
 extern JE_byte min, max;

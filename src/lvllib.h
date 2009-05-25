@@ -22,7 +22,7 @@
 #include "opentyr.h"
 
 
-typedef JE_longint JE_LvlPosType[43]; /* [1..42 + 1] */
+typedef JE_longint JE_LvlPosType[43]; /* [1..42 + 1]  Why 42? Aside from the fact that it's the answer... */
 
 extern JE_LvlPosType lvlPos;
 extern char levelFile[13]; /* string [12] */

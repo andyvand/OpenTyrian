@@ -202,22 +202,29 @@ void JE_loadHelpText( void )
 
 	#ifdef TYRIAN2000
 	for (i = 0; i < 72; i++)
-	#else
-	for (i = 0; i < 68; i++)
-	#endif
 	{
 		JE_readCryptLn(f, miscText[i]);      /*Miscellaneous text*/
 	}
+	#else
+	for (i = 0; i < 68; i++)
+	{
+		JE_readCryptLn(f, miscText[i]);      /*Miscellaneous text*/
+	}
+	#endif
+
 	JE_skipCryptLn(f); JE_skipCryptLn(f);
 
 	#ifdef TYRIAN2000
 	for (i = 0; i < 8; i++)
-	#else
-	for (i = 0; i < 5; i++)
-	#endif
 	{
 		JE_readCryptLn(f, miscTextB[i]);     /*Little Miscellaneous text*/
 	}
+	#else
+	for (i = 0; i < 5; i++)
+	{
+		JE_readCryptLn(f, miscTextB[i]);     /*Little Miscellaneous text*/
+	}
+#endif
 	JE_skipCryptLn(f); JE_skipCryptLn(f);
 
 	for (i = 0; i < 11; i++)
