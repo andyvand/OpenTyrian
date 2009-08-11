@@ -25,7 +25,7 @@
 #include <assert.h>
 #include <stdbool.h>
 
-bool fullscreen_enabled;
+bool fullscreen_enabled = false;
 
 SDL_Surface *display_surface;
 
@@ -40,8 +40,7 @@ void init_video( void )
 	
 	if (SDL_InitSubSystem(SDL_INIT_VIDEO) == -1)
 	{
-video_error:
-		printf("error: failed to initialize SDL video: %s\n", SDL_GetError());
+		fprintf(stderr, "error: failed to initialize SDL video: %s\n", SDL_GetError());
 		exit(1);
 	}
 	
@@ -89,7 +88,7 @@ void reinit_video( void )
 	
 	if (display_surface == NULL)
 	{
-		printf("error: failed to initialize SDL video: %s\n", SDL_GetError());
+		fprintf(stderr, "error: failed to initialize SDL video: %s\n", SDL_GetError());
 		exit(1);
 	} else {
 		printf("initialized SDL video: %dx%dx%d\n", w, h, bpp);

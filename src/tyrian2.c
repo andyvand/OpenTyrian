@@ -20,7 +20,7 @@
 #include "backgrnd.h"
 #include "destruct.h"
 #include "episodes.h"
-#include "error.h"
+#include "file.h"
 #include "fonthand.h"
 #include "game_menu.h"
 #include "joystick.h"
@@ -665,9 +665,8 @@ draw_enemy_end:
 
 void JE_main( void )
 {
-	int i, j, l;
-	JE_byte **bp;
-
+	int i;
+	
 	JE_byte *p; /* source/shape pointer */
 	Uint8 *s; /* screen pointer, 8-bit specific */
 	Uint8 *s_limit; /* buffer boundary */
@@ -677,7 +676,7 @@ void JE_main( void )
 	int lastEnemyOnScreen;
 
 	/* Setup Player Items/General Data */
-	for (z = 0; z < 12; z++)
+	for (int z = 0; z < 12; z++)
 	{
 		pItems[z] = 0;
 	}
@@ -1037,20 +1036,15 @@ start_level_first:
 	{
 		Uint8 new_demo_num = 0;
 		
-		dont_die = true; // for JE_find
 		do
 		{
 			sprintf(tempStr, "demorec.%d", new_demo_num++);
 		}
-		while (JE_find(tempStr)); // until file doesn't exist
-		dont_die = false;
+		while (dir_file_exists(get_user_directory(), tempStr)); // until file doesn't exist
 		
-		demo_file = fopen_check(tempStr, "wb");
+		demo_file = dir_fopen_warn(get_user_directory(), tempStr, "wb");
 		if (!demo_file)
-		{
-			printf("error: failed to open '%s' (mode '%s')\n", tempStr, "wb");
 			exit(1);
-		}
 		
 		efwrite(&episodeNum, 1,  1, demo_file);
 		efwrite(levelName,   1, 10, demo_file);
@@ -1566,7 +1560,7 @@ level_loop:
 	}
 
 	/* Player Shot Images */
-	for (z = 0; z < MAX_PWEAPON; z++)
+	for (int z = 0; z < MAX_PWEAPON; z++)
 	{
 		if (shotAvail[z] != 0)
 		{
@@ -2015,7 +2009,7 @@ draw_player_shot_loop_end:
 	{    /*MAIN DRAWING IS STOPPED STARTING HERE*/
 
 		/* Draw Enemy Shots */
-		for (z = 0; z < ENEMY_SHOT_MAX; z++)
+		for (int z = 0; z < ENEMY_SHOT_MAX; z++)
 		{
 			if (enemyShotAvail[z] == 0)
 			{
@@ -2748,22 +2742,16 @@ void JE_loadMap( void )
 
 	JE_DanCShape shape;
 	JE_boolean shapeBlank;
-
-
-	FILE *f;
-	JE_char k2, k3;
+	
 	JE_word x, y;
-	JE_integer yy, z, a, b;
+	JE_integer yy;
 	JE_word mapSh[3][128]; /* [1..3, 0..127] */
 	JE_byte *ref[3][128]; /* [1..3, 0..127] */
 	char s[256];
-	JE_byte col, planets, shade;
-
-
-
+	
 	JE_byte mapBuf[15 * 600]; /* [1..15 * 600] */
 	JE_word bufLoc;
-
+	
 	char buffer[256];
 	int i;
 	Uint8 pic_buffer[320*200]; /* screen buffer, 8-bit specific */
@@ -2817,7 +2805,7 @@ new_game:
 	{
 		do
 		{
-			JE_resetFile(&lvlFile, macroFile);
+			lvlFile = dir_fopen_die(data_dir(), macroFile, "rb");
 
 			x = 0;
 			jumpSection = false;
@@ -3162,7 +3150,7 @@ new_game:
 
 									service_SDL_events(true);
 									
-									for (z = 0; z <= 199; z++)
+									for (int z = 0; z <= 199; z++)
 									{
 										if (!newkey)
 										{
@@ -3211,7 +3199,7 @@ new_game:
 									memcpy(pic_buffer, VGAScreen->pixels, sizeof(pic_buffer));
 
 									service_SDL_events(true);
-									for (z = 0; z <= 199; z++)
+									for (int z = 0; z <= 199; z++)
 									{
 										if (!newkey)
 										{
@@ -3261,7 +3249,7 @@ new_game:
 
 									service_SDL_events(true);
 									
-									for (z = 0; z <= 318; z++)
+									for (int z = 0; z <= 318; z++)
 									{
 										if (!newkey)
 										{
@@ -3415,7 +3403,7 @@ new_game:
 	else
 		fade_black(50);
 	
-	JE_resetFile(&lvlFile, levelFile);
+	lvlFile = dir_fopen_die(data_dir(), levelFile, "rb");
 	fseek(lvlFile, lvlPos[(lvlFileNum-1) * 2], SEEK_SET);
 	
 	char_mapFile = fgetc(lvlFile);
@@ -3460,12 +3448,10 @@ new_game:
 	
 	/* Read Shapes.DAT */
 	sprintf(tempStr, "shapes%c.dat", tolower(char_shapeFile));
-
 	printf("reading %s file tyrian2.c\n", tempStr);
-
-	JE_resetFile(&shpFile, tempStr);
+	shpFile = dir_fopen_die(data_dir(), tempStr, "rb");
 	
-	for (z = 0; z < 600; z++)
+	for (int z = 0; z < 600; z++)
 	{
 		shapeBlank = fgetc(shpFile);
 		
@@ -3603,9 +3589,7 @@ void JE_titleScreen( JE_boolean animate )
 	JE_boolean redraw = true,
 	           fadeIn = false,
 	           first = true;
-	JE_char flash;
-	JE_word z;
-
+	
 	JE_word temp; /* JE_byte temp; from varz.h will overflow in for loop */
 
 	if (haltGame)
@@ -4582,8 +4566,6 @@ JE_boolean JE_searchFor/*enemy*/( JE_byte PLType )
 
 void JE_eventSystem( void )
 {
-	JE_boolean tempb;
-	
 	switch (eventRec[eventLoc-1].eventtype)
 	{
 		case 1:
@@ -4751,7 +4733,7 @@ void JE_eventSystem( void )
 		case 16:
 			if (eventRec[eventLoc-1].eventdat > 9)
 			{
-				printf("error: event 16: bad event data\n");
+				fprintf(stderr, "warning: event 16: bad event data\n");
 			} else {
 				JE_drawTextWindow(outputs[eventRec[eventLoc-1].eventdat-1]);
 				soundQueue[3] = windowTextSamples[eventRec[eventLoc-1].eventdat-1];
@@ -5322,7 +5304,6 @@ void JE_eventSystem( void )
 			break;
 
 		case 71:
-			printf("warning: event 71: possibly bad map repositioning\n");
 			if (((((intptr_t)mapYPos - (intptr_t)&megaData1->mainmap) / sizeof(JE_byte *)) * 2) <= eventRec[eventLoc-1].eventdat2) /* <MXD> ported correctly? */
 			{
 				JE_eventJump(eventRec[eventLoc-1].eventdat);
@@ -5399,7 +5380,6 @@ void JE_eventSystem( void )
 			break;
 
 		case 77:
-			printf("warning: event 77: possibly bad map repositioning\n");
 			mapYPos = &megaData1->mainmap[0][0];
 			mapYPos += eventRec[eventLoc-1].eventdat / 2;
 			if (eventRec[eventLoc-1].eventdat2 > 0)
@@ -5430,7 +5410,6 @@ void JE_eventSystem( void )
 			break;
 
 		case 81: /*WRAP2*/
-			printf("warning: event 81: possibly bad map repositioning\n");
 			BKwrap2   = &megaData2->mainmap[0][0];
 			BKwrap2   += eventRec[eventLoc-1].eventdat / 2;
 			BKwrap2to = &megaData2->mainmap[0][0];
@@ -5445,7 +5424,7 @@ void JE_eventSystem( void )
 			shotRepeat[11-1] = 0;
 			break;
 		default:
-			printf("warning: event %d: unhandled event\n", eventRec[eventLoc-1].eventtype);
+			fprintf(stderr, "warning: event %d: unhandled event\n", eventRec[eventLoc-1].eventtype);
 			break;
 	}
 

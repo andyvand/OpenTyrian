@@ -16,10 +16,9 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-
 #include "config.h"
 #include "episodes.h"
-#include "error.h"
+#include "file.h"
 #include "lvllib.h"
 #include "lvlmast.h"
 #include "opentyr.h"
@@ -59,12 +58,14 @@ void JE_loadItemDat( void )
 
 	int i, j;
 
-	if (episodeNum > 3)
+	if ((episodeNum > 3)||(episodeNum ==5))
 	{
-		JE_resetFile(&lvlFile, levelFile);
+		lvlFile = dir_fopen_die(data_dir(), levelFile, "rb");
 		fseek(lvlFile, lvlPos[lvlNum-1], SEEK_SET);
-	} else {
-		JE_resetFile(&lvlFile, "tyrian.hdt");
+	}
+	else
+	{
+		lvlFile = dir_fopen_die(data_dir(), "tyrian.hdt", "rb");
 		efread(&episode1DataLoc, sizeof(JE_longint), 1, lvlFile);
 		fseek(lvlFile, episode1DataLoc, SEEK_SET);
 	}
@@ -103,9 +104,9 @@ void JE_loadItemDat( void )
 
 	fprintf(stderr, "printing WEAPONPORT\n");
 
-	unsigned long int position2;
+	fpos_t position2;
 	fgetpos(lvlFile, &position2);
-	fprintf(stderr, "weaponPort at %ld\n", position2);
+	// fprintf(stderr, "weaponPort at %ld\n", (long int) position2);
 	if (episodeNum <= 3) fseek(lvlFile, 0x252A4, SEEK_SET);
 	if (episodeNum == 4) fseek(lvlFile, 0xC1F5E, SEEK_SET);
 	if (episodeNum == 5) fseek(lvlFile, 0x5C5B8, SEEK_SET);
@@ -128,9 +129,9 @@ void JE_loadItemDat( void )
 
 	fprintf(stderr, "printing SPECIAL\n");
 
-	unsigned long int position3;
+	fpos_t position3;
 	fgetpos(lvlFile, &position3);
-	fprintf(stderr, "special at %ld\n", position3);
+	// fprintf(stderr, "special at %ld\n", (long int) position3);
 	if (episodeNum <= 3) fseek(lvlFile, 0x2662E, SEEK_SET);
 	if (episodeNum == 4) fseek(lvlFile, 0xC32E8, SEEK_SET);
 	if (episodeNum == 5) fseek(lvlFile, 0x5D942, SEEK_SET);
@@ -152,9 +153,9 @@ void JE_loadItemDat( void )
 
 	fprintf(stderr, "printing POWERSYS\n");
 
-	unsigned long int position4;
-	fgetpos(lvlFile, &position4);
-	fprintf(stderr, "powerSys at %ld\n", position4);
+	fpos_t position4;
+	fgetpos(lvlFile,&position4);
+	// fprintf(stderr, "powerSys at %ld\n", (long int) position4);
 	if (episodeNum <= 3) fseek(lvlFile, 0x26E21, SEEK_SET);
 	if (episodeNum == 4) fseek(lvlFile, 0xC3ADB, SEEK_SET);
 	if (episodeNum == 5) fseek(lvlFile, 0x5E135, SEEK_SET);
@@ -173,9 +174,9 @@ void JE_loadItemDat( void )
 
 	fprintf(stderr, "printing SHIPS\n");
 
-	unsigned long int position5;
+	fpos_t position5;
 	fgetpos(lvlFile, &position5);
-	fprintf(stderr, "ships at %ld\n", position5);
+	// fprintf(stderr, "ships at %ld\n",(long int) position5);
 	if (episodeNum <= 3) fseek(lvlFile, 0x26F24, SEEK_SET);
 	if (episodeNum == 4) fseek(lvlFile, 0xC3BDE, SEEK_SET);
 	if (episodeNum == 5) fseek(lvlFile, 0x5E238, SEEK_SET);
@@ -197,9 +198,9 @@ void JE_loadItemDat( void )
 
 	fprintf(stderr, "printing OPTIONS\n");
 
-	unsigned long int position6;
-	fgetpos(lvlFile, &position6);
-	fprintf(stderr, "options at %ld\n", position6);
+	fpos_t position6;
+	fgetpos(lvlFile,&position6);
+	// fprintf(stderr, "options at %ld\n",(long int) position6);
 	if (episodeNum <= 3) fseek(lvlFile, 0x2722F, SEEK_SET);
 	if (episodeNum == 4) fseek(lvlFile, 0xC3EE9, SEEK_SET);
 	if (episodeNum == 5) fseek(lvlFile, 0x5E543, SEEK_SET);
@@ -227,9 +228,9 @@ void JE_loadItemDat( void )
 
 	fprintf(stderr, "printing SHIELDS\n");
 
-	unsigned long int position7;
+	fpos_t position7;
 	fgetpos(lvlFile, &position7);
-	fprintf(stderr, "weaponport at %ld\n", position7);
+	// fprintf(stderr, "weaponport at %ld\n", (long int) position7);
 	if (episodeNum <= 3) fseek(lvlFile, 0x27EF3, SEEK_SET);
 	if (episodeNum == 4) fseek(lvlFile, 0xC4BAD, SEEK_SET);
 	if (episodeNum == 5) fseek(lvlFile, 0x5F207, SEEK_SET);
@@ -306,16 +307,11 @@ void JE_initEpisode( JE_byte newEpisode )
 
 void JE_scanForEpisodes( void )
 {
-	JE_byte temp;
-
-	char buf[sizeof(dir) + 11];
-
-	JE_findTyrian("tyrian1.lvl"); /* need to know where to scan */
-
-	for (temp = 0; temp < EPISODE_MAX; temp++)
+	for (int i = 0; i < EPISODE_MAX; ++i)
 	{
-		sprintf(buf, "%styrian%d.lvl", dir, temp + 1);
-		episodeAvail[temp] = JE_find(buf);
+		char ep_file[20];
+		snprintf(ep_file, sizeof(ep_file), "tyrian%d.lvl", i + 1);
+		episodeAvail[i] = dir_file_exists(data_dir(), ep_file);
 	}
 }
 

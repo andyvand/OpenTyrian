@@ -27,7 +27,7 @@
 /* Episodes and general data */
 
 #define FIRST_LEVEL 1
-#define EPISODE_MAX 5
+#define EPISODE_MAX 5 
 
 typedef struct
 {

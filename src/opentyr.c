@@ -16,12 +16,10 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-#include "opentyr.h"
-
 #include "config.h"
 #include "editship.h"
 #include "episodes.h"
-#include "error.h"
+#include "file.h"
 #include "fonthand.h"
 #include "helptext.h"
 #include "joystick.h"
@@ -35,6 +33,7 @@
 #include "newshape.h"
 #include "nortsong.h"
 #include "nortvars.h"
+#include "opentyr.h"
 #include "params.h"
 #include "picload.h"
 #include "scroller.h"
@@ -74,84 +73,6 @@ char *strnztcpy( char *to, const char *from, size_t count )
 	to[count] = '\0';
 	return strncpy(to, from, count);
 }
-
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-/* endian-swapping fread */
-size_t efread( void *buffer, size_t size, size_t num, FILE *stream )
-{
-	size_t i, f = fread(buffer, size, num, stream);
-
-	switch (size)
-	{
-		case 2:
-			for (i = 0; i < num; i++)
-			{
-				((Uint16 *)buffer)[i] = SDL_Swap16(((Uint16 *)buffer)[i]);
-			}
-			break;
-		case 4:
-			for (i = 0; i < num; i++)
-			{
-				((Uint32 *)buffer)[i] = SDL_Swap32(((Uint32 *)buffer)[i]);
-			}
-			break;
-		case 8:
-			for (i = 0; i < num; i++)
-			{
-				((Uint64 *)buffer)[i] = SDL_Swap64(((Uint64 *)buffer)[i]);
-			}
-			break;
-		default:
-			break;
-	}
-
-	return f;
-}
-
-/* endian-swapping fwrite */
-size_t efwrite( void *buffer, size_t size, size_t num, FILE *stream )
-{
-	void *swap_buffer;
-	size_t i, f;
-
-	switch (size)
-	{
-		case 2:
-			swap_buffer = malloc(size * num);
-			for (i = 0; i < num; i++)
-			{
-				((Uint16 *)swap_buffer)[i] = SDL_SwapLE16(((Uint16 *)buffer)[i]);
-			}
-			break;
-		case 4:
-			swap_buffer = malloc(size * num);
-			for (i = 0; i < num; i++)
-			{
-				((Uint32 *)swap_buffer)[i] = SDL_SwapLE32(((Uint32 *)buffer)[i]);
-			}
-			break;
-		case 8:
-			swap_buffer = malloc(size * num);
-			for (i = 0; i < num; i++)
-			{
-				((Uint64 *)swap_buffer)[i] = SDL_SwapLE64(((Uint64 *)buffer)[i]);
-			}
-			break;
-		default:
-			swap_buffer = buffer;
-			break;
-	}
-
-	f = fwrite(swap_buffer, size, num, stream);
-
-	if (swap_buffer != buffer)
-	{
-		free(swap_buffer);
-	}
-
-	return f;
-}
-#endif
 
 void opentyrian_menu( void )
 {
@@ -338,11 +259,11 @@ int main( int argc, char *argv[] )
 	printf("assuming mouse detected\n"); // SDL can't tell us if there isn't one
 	
 	xmas |= xmas_time();
-	if (xmas && (JE_getFileSize("tyrianc.shp") == 0 || JE_getFileSize("voicesc.snd") == 0))
+	if (xmas && (!dir_file_exists(data_dir(), "tyrianc.shp") || !dir_file_exists(data_dir(), "voicesc.snd")))
 	{
 		xmas = false;
 		
-		printf("Christmas is missing.\n");
+		fprintf(stderr, "warning: Christmas is missing.\n");
 	}
 	
 	JE_loadPals();

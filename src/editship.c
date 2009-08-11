@@ -16,11 +16,11 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-#include "opentyr.h"
+#include "config.h"
 #include "editship.h"
-
-#include "error.h"
+#include "file.h"
 #include "nortvars.h"
+#include "opentyr.h"
 
 #define SAS (sizeof(JE_ShipsType) - 4)
 
@@ -35,7 +35,7 @@ void JE_decryptShips( void )
 {
 	JE_boolean correct = true;
 	JE_ShipsType s2;
-	JE_byte y, z;
+	JE_byte y;
 	
 	for (int x = SAS - 1; x >= 0; x--)
 	{
@@ -106,25 +106,17 @@ void JE_endShape( void )
 
 void JE_loadExtraShapes( void )
 {
-	dont_die = true;
-	char *temp = JE_locateFile("newsh$.shp");
-	dont_die = false;
+	FILE *f = dir_fopen(get_user_directory(), "newsh$.shp", "rb");
 	
-	FILE *f;
-	
-	if (temp)
+	if (f)
 	{
-		f = fopen_check(temp, "rb");
-		if (f)
-		{
-			extraAvail = true;
-			extraShapeSize = get_stream_size(f) - sizeof(extraShips);
-			extraShapes = malloc(extraShapeSize);
-			efread(extraShapes, extraShapeSize, 1, f);
-			efread(extraShips, sizeof(extraShips), 1, f);
-			JE_decryptShips();
-			fclose(f);
-		}
+		extraAvail = true;
+		extraShapeSize = ftell_eof(f) - sizeof(extraShips);
+		extraShapes = malloc(extraShapeSize);
+		efread(extraShapes, extraShapeSize, 1, f);
+		efread(extraShips, sizeof(extraShips), 1, f);
+		JE_decryptShips();
+		fclose(f);
 	}
 }
 

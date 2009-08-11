@@ -1,4 +1,4 @@
-/* 
+/*
  * OpenTyrian Classic: A modern cross-platform port of Tyrian
  * Copyright (C) 2007-2009  The OpenTyrian Development Team
  *
@@ -19,8 +19,12 @@
 #ifndef MTRAND_H
 #define MTRAND_H
 
-void mt_srand(unsigned long s);
-unsigned long mt_rand(void);
+#define MT_RAND_MAX 0xffffffffUL
+
+void mt_srand( unsigned long s );
+unsigned long mt_rand( void );
+double mt_rand_1(void);
+double mt_rand_lt1(void);
 
 #endif /* MTRAND_H */
 

@@ -16,15 +16,14 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-#include "opentyr.h"
-#include "newshape.h"
-
-#include "error.h"
+#include "file.h"
 #include "joystick.h"
 #include "keyboard.h"
 #include "network.h"
+#include "newshape.h"
 #include "nortsong.h"
 #include "nortvars.h"
+#include "opentyr.h"
 #include "params.h"
 #include "varz.h"
 #include "vga256d.h"
@@ -80,14 +79,12 @@ void JE_newLoadShapesB( JE_byte table, FILE *f )
 	}
 }
 
-void JE_newLoadShapes( JE_byte table, char *shapefile )
+void JE_newLoadShapes( JE_byte table, const char *shapefile )
 {
-	FILE *f;
-	
 	JE_newPurgeShapes(table);
 	
 	printf("reading %s file newshape.c\n", shapefile);
-	JE_resetFile(&f, shapefile);
+	FILE *f = dir_fopen_die(data_dir(), shapefile, "rb");
 	
 	JE_newLoadShapesB(table, f);
 	

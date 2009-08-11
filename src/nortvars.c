@@ -16,19 +16,16 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-#include "opentyr.h"
-#include "nortvars.h"
-
-#include "error.h"
+#include "file.h"
 #include "joystick.h"
 #include "keyboard.h"
+#include "nortvars.h"
+#include "opentyr.h"
 #include "vga256d.h"
 #include "video.h"
 
 #include <ctype.h>
 
-/*JE_word z;*/
-JE_word y;
 /* File constants for Saving ShapeFile */
 const JE_byte NV_shapeactive   = 0x01;
 const JE_byte NV_shapeinactive = 0x00;
@@ -51,16 +48,14 @@ JE_word JE_btow(JE_byte a, JE_byte b)
 
 void JE_loadShapeFile( JE_ShapeType *shapes, JE_char s )
 {
-	FILE *f;
-	JE_word x;
 	JE_boolean active;
 
 	char buffer[12];
 	sprintf(buffer, "shapes%c.dat", tolower(s));
 
-	JE_resetFile(&f, buffer);
+	FILE *f = dir_fopen_die(data_dir(), buffer, "rb");
 
-	for (x = 0; x < 304; x++)
+	for (int x = 0; x < 304; x++)
 	{
 		active = getc(f);
 
@@ -79,7 +74,6 @@ void JE_loadShapeFile( JE_ShapeType *shapes, JE_char s )
 
 void JE_loadNewShapeFile( JE_NewShapeType *shapes, JE_char s )
 {
-	FILE *f;
 	JE_word x, y, z;
 	JE_boolean active;
 	JE_ShapeTypeOne tempshape;
@@ -88,7 +82,7 @@ void JE_loadNewShapeFile( JE_NewShapeType *shapes, JE_char s )
 	char buffer[12];
 	sprintf(buffer, "shapes%c.dat", tolower(s));
 
-	JE_resetFile(&f, buffer);
+	FILE *f = dir_fopen_die(data_dir(), buffer, "rb");
 
 	for (z = 0; z < 304; z++)
 	{
@@ -145,8 +139,6 @@ void JE_loadNewShapeFile( JE_NewShapeType *shapes, JE_char s )
 
 void JE_loadCompShapes( JE_byte **shapes, JE_word *shapeSize, JE_char s )
 {
-	FILE *f;
-
 	char buffer[11];
 	sprintf(buffer, "newsh%c.shp", tolower(s));
 
@@ -154,9 +146,9 @@ void JE_loadCompShapes( JE_byte **shapes, JE_word *shapeSize, JE_char s )
 	{
 		free(*shapes);
 	}
-	
+
 	printf("reading %s file nortvars.c\n", buffer);
-	JE_resetFile(&f, buffer);
+	FILE *f = dir_fopen_die(data_dir(), buffer, "rb");
 
 	fseek(f, 0, SEEK_END);
 	*shapeSize = ftell(f);

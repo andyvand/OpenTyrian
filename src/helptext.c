@@ -16,15 +16,14 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-#include "opentyr.h"
-#include "helptext.h"
-
 #include "config.h"
 #include "episodes.h"
-#include "error.h"
+#include "file.h"
 #include "fonthand.h"
+#include "helptext.h"
 #include "menus.h"
 #include "newshape.h"
+#include "opentyr.h"
 
 #include <string.h>
 
@@ -119,8 +118,6 @@ char orderInfo[6][31];
 char lastSection[6][60];
 #endif
 
-JE_byte temp, temp2;
-
 void JE_helpBox( JE_word x, JE_word y, char *message, JE_byte boxwidth )
 {
 	JE_byte startpos, endpos, pos;
@@ -182,11 +179,11 @@ void JE_HBox( JE_word x, JE_word y, JE_byte messagenum, JE_byte boxwidth )
 
 void JE_loadHelpText( void )
 {
-	FILE *f; int i;
-
-	JE_resetFile(&f, "tyrian.hdt");
+	FILE *f = dir_fopen_die(data_dir(), "tyrian.hdt", "rb");
 	efread(&episode1DataLoc, sizeof(JE_longint), 1, f);
 	JE_skipCryptLn(f);
+
+	int i;
 
 	for (i = 0; i < MAX_HELP_MESSAGE; i++)
 	{

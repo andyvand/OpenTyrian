@@ -16,16 +16,15 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-#include "opentyr.h"
 #include "config.h"
-
 #include "episodes.h"
-#include "error.h"
+#include "file.h"
 #include "joystick.h"
 #include "loudness.h"
 #include "mtrand.h"
 #include "nortsong.h"
 #include "nortvars.h"
+#include "opentyr.h"
 #include "varz.h"
 #include "vga256d.h"
 #include "video.h"
@@ -173,7 +172,7 @@ JE_byte       shieldWait, shieldT;
 
 JE_byte          shotRepeat[11], shotMultiPos[11]; /* [1..11] */  /* 7,8 = Superbomb */
 JE_byte          portConfig[10]; /* [1..10] */
-JE_boolean       portConfigDone;
+JE_boolean       portConfigChange, portConfigDone;
 JE_PortPowerType portPower, lastPortPower;
 
 JE_boolean resetVersion;
@@ -235,8 +234,6 @@ JE_SaveGameTemp saveTemp;
 
 JE_word editorLevel;   /*Initial value 800*/
 
-JE_word x;
-
 const JE_byte StringCryptKey[10] = {99, 204, 129, 63, 255, 71, 19, 25, 62, 1};
 
 void JE_decryptString( char *s, JE_byte len )
@@ -286,10 +283,8 @@ void JE_setupStars( void )
 	}
 }
 
-void JE_saveGame( JE_byte slot, char *name )
+void JE_saveGame( JE_byte slot, const char *name )
 {
-	int i;
-	
 	saveFiles[slot-1].initialDifficulty = initialDifficulty;
 	saveFiles[slot-1].gameHasRepeated = gameHasRepeated;
 	saveFiles[slot-1].level = saveLevel;
@@ -525,10 +520,9 @@ void JE_setNewGameSpeed( void )
 
 void JE_encryptSaveTemp( void )
 {
-	JE_SaveGameTemp s2, s3;
-	char c;
+	JE_SaveGameTemp s3;
 	JE_word x;
-	JE_byte y, z;
+	JE_byte y;
 
 	memcpy(&s3, &saveTemp, sizeof(s3));
 
@@ -574,9 +568,8 @@ void JE_decryptSaveTemp( void )
 {
 	JE_boolean correct = true;
 	JE_SaveGameTemp s2;
-	/*JE_word x;*/
 	int x;
-	JE_byte y, z;
+	JE_byte y;
 
 	/* Decrypt save game file */
 	for (x = (SAVE_FILE_SIZE - 1); x >= 0; x--)
@@ -639,7 +632,7 @@ void JE_decryptSaveTemp( void )
 	/* Barf and die if save file doesn't validate */
 	if (!correct)
 	{
-		printf("Error reading save file!\n");
+		fprintf(stderr, "Error reading save file!\n");
 		exit(255);
 	}
 
@@ -650,14 +643,21 @@ void JE_decryptSaveTemp( void )
 #ifndef TARGET_MACOSX
 const char *get_user_directory( void )
 {
-	static char userdir[500] = "";
+	static char user_dir[500] = "";
+	
+	if (strlen(user_dir) == 0)
+	{
 #ifdef TARGET_UNIX
-	if (strlen(userdir) == 0 && getenv("HOME"))
-		snprintf(userdir, sizeof(userdir), "%s/.opentyrian/", getenv("HOME"));
-#endif /* TARGET_UNIX */
-	return userdir;
+		if (getenv("HOME"))
+			snprintf(user_dir, sizeof(user_dir), "%s/.opentyrian", getenv("HOME"));
+#else
+		strcpy(user_dir, ".");
+#endif // TARGET_UNIX
+	}
+	
+	return user_dir;
 }
-#endif /* TARGET_MACOSX */
+#endif // TARGET_MACOSX
 
 // for compatibility
 Uint8 joyButtonAssign[4] = {1, 4, 5, 5};
@@ -670,13 +670,8 @@ void JE_loadConfiguration( void )
 	JE_byte *p;
 	int y;
 	
-	errorActive = true;
-	
-	char cfgfile[1000];
-	snprintf(cfgfile, sizeof(cfgfile), "%s" "tyrian.cfg", get_user_directory());
-	
-	fi = fopen_check(cfgfile, "rb");
-	if (fi && get_stream_size(fi) == 20 + sizeof(keySettings) + 2)
+	fi = dir_fopen_warn(get_user_directory(), "tyrian.cfg", "rb");
+	if (fi && ftell_eof(fi) == 20 + sizeof(keySettings) + 2)
 	{
 		/* SYN: I've hardcoded the sizes here because the .CFG file format is fixed
 		   anyways, so it's not like they'll change. */
@@ -744,10 +739,7 @@ void JE_loadConfiguration( void )
 	
 	set_volume(tyrMusicVolume, fxVolume);
 	
-	char savfile[1000];
-	snprintf(savfile, sizeof(savfile), "%s" "tyrian.sav", get_user_directory());
-	
-	fi = fopen_check(savfile, "rb");
+	fi = dir_fopen_warn(get_user_directory(), "tyrian.sav", "rb");
 	if (fi)
 	{
 
@@ -849,8 +841,6 @@ void JE_loadConfiguration( void )
 			}
 		}
 	}
-
-	errorActive = false;
 	
 	JE_initProcessorType();
 }
@@ -934,10 +924,7 @@ void JE_saveConfiguration( void )
 	
 	JE_encryptSaveTemp();
 	
-	char savfile[1000];
-	snprintf(savfile, sizeof(savfile), "%s" "tyrian.sav", get_user_directory());
-	
-	f = fopen_check(savfile, "wb");
+	f = dir_fopen_warn(get_user_directory(), "tyrian.sav", "wb");
 	if (f)
 	{
 		efwrite(saveTemp, 1, sizeof(saveTemp), f);
@@ -948,10 +935,7 @@ void JE_saveConfiguration( void )
 	}
 	JE_decryptSaveTemp();
 	
-	char cfgfile[1000];
-	snprintf(cfgfile, sizeof(cfgfile), "%s" "tyrian.cfg", get_user_directory());
-	
-	f = fopen_check(cfgfile, "wb");
+	f = dir_fopen_warn(get_user_directory(), "tyrian.cfg", "wb");
 	if (f)
 	{
 		efwrite(&background2, 1, 1, f);

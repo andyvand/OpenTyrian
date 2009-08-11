@@ -23,6 +23,7 @@
 
 
 #define EVENT_MAXIMUM 2500
+/* values extracted from Tyrian2000 hdt*/
 #ifdef TYRIAN2000
 #define WEAP_NUM    818
 #define PORT_NUM    60

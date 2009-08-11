@@ -119,7 +119,7 @@ extern JE_integer armorLevel, armorLevel2;
 extern JE_byte shieldWait, shieldT;
 extern JE_byte shotRepeat[11], shotMultiPos[11];
 extern JE_byte portConfig[10];
-extern JE_boolean portConfigDone;
+extern JE_boolean portConfigChange, portConfigDone;
 extern JE_PortPowerType portPower, lastPortPower;
 extern JE_boolean resetVersion;
 extern char lastLevelName[11], levelName[11];
@@ -159,7 +159,7 @@ void JE_skipCryptLn( FILE* f );
 
 void JE_setupStars( void );
 
-void JE_saveGame( JE_byte slot, char *name );
+void JE_saveGame( JE_byte slot, const char *name );
 void JE_loadGame( JE_byte slot );
 
 void JE_decryptString( char *s, JE_byte len );

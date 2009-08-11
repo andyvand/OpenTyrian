@@ -16,19 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-#include "opentyr.h"
 #include "animlib.h"
-
-#include "error.h"
-#include "joystick.h"
-#include "network.h"
-#include "nortsong.h"
-#include "nortvars.h"
-#include "vga256d.h"
-
-
-JE_word currentpageofs;
-JE_word currentpageseg;
 
 void JE_loadPage( JE_word pagenumber )
 {
