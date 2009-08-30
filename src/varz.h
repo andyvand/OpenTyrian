@@ -330,13 +330,17 @@ extern JE_byte purpleBallsRemaining[2];
 extern JE_boolean playerAlive, playerAliveB;
 extern JE_byte playerStillExploding, playerStillExploding2;
 extern JE_byte *eShapes1, *eShapes2, *eShapes3, *eShapes4, *eShapes5, *eShapes6;
+#ifdef TYRIAN2000
+extern JE_byte *shapesC1, *shapes6, *shapes9, *shapesW2, *shapes2K;
+extern JE_word eShapes1Size, eShapes2Size, eShapes3Size, eShapes4Size, eShapes5Size, eShapes6Size, shapesC1Size, shapes6Size, shapes9Size, shapesW2Size, shapes2KSize;
+#else
 extern JE_byte *shapesC1, *shapes6, *shapes9, *shapesW2;
 extern JE_word eShapes1Size, eShapes2Size, eShapes3Size, eShapes4Size, eShapes5Size, eShapes6Size, shapesC1Size, shapes6Size, shapes9Size, shapesW2Size;
+#endif
 extern JE_byte sAni;
 extern JE_integer sAniX, sAniY, sAniXNeg, sAniYNeg;
 extern JE_integer baseSpeedOld, baseSpeedOld2, baseSpeed, baseSpeedB, baseSpeed2, baseSpeed2B, baseSpeedKeyH, baseSpeedKeyV;
 extern JE_boolean keyMoveWait;
-extern JE_boolean makeMouseDelay;
 extern JE_word playerInvulnerable1, playerInvulnerable2;
 extern JE_integer lastPXShotMove, lastPYShotMove;
 extern JE_integer PXB, PYB, lastPXB, lastPYB, lastPX2B, lastPY2B, PXChangeB, PYChangeB, lastTurnB, lastTurn2B, tempLastTurn2B;

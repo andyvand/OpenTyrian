@@ -43,10 +43,10 @@ bool select_gameplay( void )
 	JE_dString(JE_fontCenter(gameplay_name[0], FONT_SHAPES), 20, gameplay_name[0], FONT_SHAPES);
 	
 	int gameplay = 1,
-	#ifdef TYRIAN2000
-	    gameplay_max = 5;
-    #else
-        gameplay_max = 4;
+#ifdef TYRIAN2000
+    gameplay_max = 5;
+#else
+	    gameplay_max = 4;
     #endif
 	
 	bool fade_in = true;

@@ -67,7 +67,7 @@ JE_boolean useLastBank; /* See if I want to use the last 16 colors for DisplayTe
 bool pause_pressed = false, ingamemenu_pressed = false;
 
 /* Draws a message at the bottom text window on the playing screen */
-void JE_drawTextWindow( char *text )
+void JE_drawTextWindow( const char *text )
 {
 	if (textErase > 0) // erase current text
 		blit_shape(VGAScreenSeg, 16, 189, OPTION_SHAPES, 36);  // in-game text area
@@ -77,7 +77,7 @@ void JE_drawTextWindow( char *text )
 	JE_outText(20, 190, text, 0, 4);
 }
 
-void JE_outCharGlow( JE_word x, JE_word y, char *s )
+void JE_outCharGlow( JE_word x, JE_word y, const char *s )
 {
 	JE_integer maxloc, loc, z;
 	JE_shortint glowcol[60]; /* [1..60] */
@@ -432,26 +432,27 @@ void JE_loadCompShapesB( JE_byte **shapes, FILE *f, JE_word shapeSize )
 	efread(*shapes, sizeof(JE_byte), shapeSize, f);
 }
 
-void JE_loadMainShapeTables( char *shpfile )
+void JE_loadMainShapeTables( const char *shpfile )
 {
 	FILE *f = dir_fopen_die(data_dir(), shpfile, "rb");
 	
 	JE_word shpNumb;
-    
-    efread(&shpNumb, sizeof(JE_word), 1, f);
-    JE_longint shpPos[shpNumb+1]; // number of texture banks +1 for file length
+	JE_longint shpPos[shpNumb+1]; // number of texture banks +1 for file length
+	efread(&shpNumb, sizeof(JE_word), 1, f);
 
-    for (int i = 0; i < shpNumb; i++)
-            efread(&shpPos[i], sizeof(JE_longint), 1, f);
-    fseek(f, 0, SEEK_END);
-    shpPos[shpNumb] = ftell(f);
-    
-    printf("offset 1 at %x\n",shpPos[0]);
+	
+	for (int i = 0; i < shpNumb; i++)
+	{
+		efread(&shpPos[i], sizeof(JE_longint), 1, f);
+	}
+	fseek(f, 0, SEEK_END);
+	shpPos[shpNumb] = ftell(f);
+	
+	printf("offset 1 at %x\n",shpPos[0]);
     for(int slot = 1;slot<=shpNumb+1;slot++){ // debug printing for offsets
     printf("slot %d is %ld bytes long\n",slot,(long int)shpPos[slot]-shpPos[slot-1]);
-    printf("offset %d at %x\n",slot,shpPos[slot]);
-    }
-	
+    printf("offset %d at %x\n",slot,shpPos[slot]);}
+
 	int i;
 	// fonts, interface, option sprites
 	for (i = 0; i < 7; i++)
@@ -483,6 +484,13 @@ void JE_loadMainShapeTables( char *shpfile )
 	// more player shot sprites
 	shapesW2Size = shpPos[i + 1] - shpPos[i];
 	JE_loadCompShapesB(&shapesW2, f, shapesW2Size);
+	
+    //#ifdef TYRIAN2000
+	//i++;
+	///* loading the extra shape slot */
+	//shapes2KSize = shpPos[i + 1] - shpPos[i];
+	//JE_loadCompShapesB(&shapes2K, f, shapes2KSize);
+	//#endif
 	
 	fclose(f);
 }
@@ -2377,33 +2385,27 @@ void JE_handleChat( void )
 	// STUB(); Annoying piece of crap =P
 }
 
-JE_boolean JE_getNumber( char *s, JE_byte *x )
+bool str_pop_int( char *str, int *val )
 {
-	JE_boolean getNumber = false;
+	bool success = false;
+	
 	char buf[256];
-
-	while (strlen(s) > 0)
+	assert(strlen(str) < sizeof(buf));
+	
+	// grab the value from str
+	char *end;
+	*val = strtol(str, &end, 10);
+	
+	if (end != str)
 	{
-		if (s[0] == ' ')
-		{
-			strcpy(buf, s+1);
-			strcpy(s, buf);
-		} else {
-			char *tmp;
-
-			*x = strtol(s, &tmp, 10);
-			if (s != tmp)
-			{
-				getNumber = true;
-			}
-			strcpy(buf, tmp);
-			strcpy(s, buf);
-			goto end_loop;
-		}
+		success = true;
+		
+		// shift the rest to the beginning
+		strcpy(buf, end);
+		strcpy(str, buf);
 	}
-
-end_loop:
-	return getNumber;
+	
+	return success;
 }
 
 void JE_operation( JE_byte slot )
@@ -3230,8 +3232,8 @@ redo:
 
 						if (input_grabbed)
 						{
-							mouseXC = mouse_x - 159;
-							mouseYC = mouse_y - 100;
+							mouseXC += mouse_x - 159;
+							mouseYC += mouse_y - 100;
 						}
 
 						if ((!isNetworkGame || playerNum_ == thisPlayerNum)
@@ -3301,46 +3303,37 @@ redo:
 						*mouseY_ = *PY_ - (*mouseY_ - *PY_);
 						mouseYC = -mouseYC;
 					}
-
+					
 					accelXC += *PX_ - *mouseX_;
 					accelYC += *PY_ - *mouseY_;
-
+					
 					if (mouseXC > 30)
 						mouseXC = 30;
-					else
-						if (mouseXC < -30)
-							mouseXC = -30;
+					else if (mouseXC < -30)
+						mouseXC = -30;
 					if (mouseYC > 30)
 						mouseYC = 30;
-					else
-						if (mouseYC < -30)
-							mouseYC = -30;
-
+					else if (mouseYC < -30)
+						mouseYC = -30;
+					
 					if (mouseXC > 0)
-						*PX_ += (mouseXC + 3 ) / 4;
-					else
-						if (mouseXC < 0)
-							*PX_ += (mouseXC - 3 ) / 4;
+						*PX_ += (mouseXC + 3) / 4;
+					else if (mouseXC < 0)
+						*PX_ += (mouseXC - 3) / 4;
 					if (mouseYC > 0)
-						*PY_ += (mouseYC + 3 ) / 4;
-					else
-						if (mouseYC < 0)
-							*PY_ += (mouseYC - 3 ) / 4;
-
-					if (makeMouseDelay)
-					{
-						if (mouseXC > 3)
-							accelXC++;
-						else
-							if (mouseXC < -2)
-								accelXC--;
-						if (mouseYC > 2)
-							accelYC++;
-						else
-							if (mouseYC < -2)
-								accelYC--;
-					}
-
+						*PY_ += (mouseYC + 3) / 4;
+					else if (mouseYC < 0)
+						*PY_ += (mouseYC - 3) / 4;
+					
+					if (mouseXC > 3)
+						accelXC++;
+					else if (mouseXC < -2)
+						accelXC--;
+					if (mouseYC > 2)
+						accelYC++;
+					else if (mouseYC < -2)
+						accelYC--;
+					
 				}   /*endLevel*/
 
 				if (isNetworkGame && playerNum_ == thisPlayerNum)
@@ -4312,7 +4305,6 @@ void JE_mainGamePlayerFunctions( void )
 	/*Reset Street-Fighter commands*/
 	memset(SFExecuted, 0, sizeof(SFExecuted));
 
-	makeMouseDelay = true;
 	portConfigChange = false;
 
 	if (twoPlayerMode)

@@ -20,7 +20,7 @@
 #include "lvllib.h"
 #include "opentyr.h"
 
-JE_LvlPosType lvlPos;
+JE_LvlPosType lvlPos; /* array of 42 ints */
 
 char levelFile[13]; /* string [12] */
 JE_word lvlNum;
@@ -30,12 +30,13 @@ void JE_analyzeLevel( void )
 	FILE *f = dir_fopen_die(data_dir(), levelFile, "rb");
 	
 	efread(&lvlNum, sizeof(JE_word), 1, f);
-	printf("reading %s in lvlib.c\n", levelFile);
+	printf("reading %s in lvlib.c, #levels = %d\n", levelFile,lvlNum);
 	
 	for (int x = 0; x < lvlNum; x++)
 		efread(&lvlPos[x], sizeof(JE_longint), 1, f);
 	
 	lvlPos[lvlNum] = ftell_eof(f);
+	
 	fprintf(stderr,"results of lvlfile %s analisys :\n",levelFile);
 	for (int x = 0; x < lvlNum; x++)
 	{

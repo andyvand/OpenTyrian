@@ -77,29 +77,9 @@ extern char shipInfo[13][2][256];
 extern char menuInt[MAX_MENU+1][11][18]; /* [0..maxmenu, 1..11] of string [17] */
 extern const JE_byte menuHelp[MAX_MENU][11];   /* [1..maxmenu, 1..11] */
 
-#ifdef TYRIAN2000
-extern char time_pName[4][23];
-extern char setupMusic[10][12];
-extern char setupMusicHelp[5][60];
-extern char setupSound[4][13];
-extern char setupSoundHelp[4][52];
-extern char setupDetailHelp[5][60];
-extern char setupMenu[7][15];
-extern char setupMenuHelp[7][64];
-extern char setupSoundCard[21][27];
-extern char setupDMACard[3][16];
-extern char setupDMAHelp[3][41];
-extern char mouseSelChoice[6][9];
-extern char licInfo[3][46];
-extern char licInfoB[39][20];
-extern char licInfoC[10][17];
-extern char orderInfo[6][31];
-extern char lastSection[6][60];
-#endif
-
 /*JE_byte temp, temp2;*/
 
-void JE_helpBox( JE_word x, JE_word y, char *message, JE_byte boxwidth );
+void JE_helpBox( JE_word x, JE_word y, const char *message, JE_byte boxwidth );
 void JE_HBox( JE_word x, JE_word y, JE_byte messagenum, JE_byte boxwidth );
 void JE_loadHelpText( void );
 

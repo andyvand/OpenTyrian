@@ -98,27 +98,7 @@ char shipInfo[13][2][256];
 #endif
 char menuInt[MAX_MENU + 1][11][18];   /* [0..maxmenu, 1..11] of string [17] */
 
-#ifdef TYRIAN2000
-char time_pName[4][23];
-char setupMusic[10][12];
-char setupMusicHelp[5][60];
-char setupSound[4][13];
-char setupSoundHelp[4][52];
-char setupDetailHelp[5][60];
-char setupMenu[7][15];
-char setupMenuHelp[7][64];
-char setupSoundCard[21][27];
-char setupDMACard[3][16];
-char setupDMAHelp[3][41];
-char mouseSelChoice[6][9];
-char licInfo[3][46];
-char licInfoB[39][20];
-char licInfoC[10][17];
-char orderInfo[6][31];
-char lastSection[6][60];
-#endif
-
-void JE_helpBox( JE_word x, JE_word y, char *message, JE_byte boxwidth )
+void JE_helpBox( JE_word x, JE_word y, const char *message, JE_byte boxwidth )
 {
 	JE_byte startpos, endpos, pos;
 	JE_boolean endstring;
@@ -197,26 +177,27 @@ void JE_loadHelpText( void )
 	}
 	JE_skipCryptLn(f); JE_skipCryptLn(f);
 
-	#ifdef TYRIAN2000
+#ifdef TYRIAN2000
 	for (i = 0; i < 72; i++)
 	{
 		JE_readCryptLn(f, miscText[i]);      /*Miscellaneous text*/
 	}
-	#else
+#else
 	for (i = 0; i < 68; i++)
 	{
 		JE_readCryptLn(f, miscText[i]);      /*Miscellaneous text*/
 	}
-	#endif
+#endif
+
 
 	JE_skipCryptLn(f); JE_skipCryptLn(f);
 
-	#ifdef TYRIAN2000
+#ifdef TYRIAN2000
 	for (i = 0; i < 8; i++)
 	{
 		JE_readCryptLn(f, miscTextB[i]);     /*Little Miscellaneous text*/
 	}
-	#else
+#else
 	for (i = 0; i < 5; i++)
 	{
 		JE_readCryptLn(f, miscTextB[i]);     /*Little Miscellaneous text*/
@@ -273,7 +254,7 @@ void JE_loadHelpText( void )
     #ifdef TYRIAN2000
 	for (i = 0; i < 9; i++)
 	#else
-    for (i = 0; i < 8; i++)
+	for (i = 0; i < 8; i++)
 	#endif
 	{
 		JE_readCryptLn(f, menuInt[3][i]);    /*Menu 3 - Options*/
@@ -313,7 +294,7 @@ void JE_loadHelpText( void )
     #ifdef TYRIAN2000
 	for (i = 0; i <= 5; i++)
 	#else
-    for (i = 0; i <= 4; i++)
+	for (i = 0; i <= 4; i++)
     #endif
 	{
 		JE_readCryptLn(f, gameplay_name[i]);
@@ -353,7 +334,7 @@ void JE_loadHelpText( void )
 		JE_readCryptLn(f, difficultyNameB[i]);   /*HighScore Difficulty Names*/
 	}
 	JE_skipCryptLn(f); JE_skipCryptLn(f);
-    
+
     #ifdef TYRIAN2000
 	for (i = 0; i < 7; i++)
 	#else
@@ -413,7 +394,7 @@ void JE_loadHelpText( void )
 		JE_readCryptLn(f, destructModeName[i]);  /*Secret DESTRUCT modes*/
 	}
 	JE_skipCryptLn(f); JE_skipCryptLn(f);
- 
+
     #ifdef TYRIAN2000
 	for (i = 0; i < 20; i++)
 	{
@@ -432,110 +413,6 @@ void JE_loadHelpText( void )
 	for (i = 0; i < 5; i++)
 	{
 		JE_readCryptLn(f, menuInt[14][i]);       /*Menu 12 - Network Options*/
-	#ifdef TYRIAN2000
-	}
-	JE_skipCryptLn(f); JE_skipCryptLn(f);
-
-	for (i = 0; i < 4; i++)
-	{
-		JE_readCryptLn(f, time_pName[i]);
-	}
-	JE_skipCryptLn(f); JE_skipCryptLn(f);
-
-	for (i = 0; i < 10; i++)
-	{
-		JE_readCryptLn(f, setupMusic[i]);
-	}
-	JE_skipCryptLn(f); JE_skipCryptLn(f);
-
-	for (i = 0; i < 5; i++)
-	{
-		JE_readCryptLn(f, setupMusicHelp[i]);
-	}
-	JE_skipCryptLn(f); JE_skipCryptLn(f);
-
-	for (i = 0; i < 4; i++)
-	{
-		JE_readCryptLn(f, setupSound[i]);
-	}
-	JE_skipCryptLn(f); JE_skipCryptLn(f);
-
-	for (i = 0; i < 4; i++)
-	{
-		JE_readCryptLn(f, setupSoundHelp[i]);
-	}
-	JE_skipCryptLn(f); JE_skipCryptLn(f);
-
-	for (i = 0; i < 5; i++)
-	{
-		JE_readCryptLn(f, setupDetailHelp[i]);
-	}
-	JE_skipCryptLn(f); JE_skipCryptLn(f);
-
-	for (i = 0; i < 7; i++)
-	{
-		JE_readCryptLn(f, setupMenu[i]);
-	}
-	JE_skipCryptLn(f); JE_skipCryptLn(f);
-
-	for (i = 0; i < 7; i++)
-	{
-		JE_readCryptLn(f, setupMenuHelp[i]);
-	}
-	JE_skipCryptLn(f); JE_skipCryptLn(f);
-
-	for (i = 0; i < 21; i++)
-	{
-		JE_readCryptLn(f, setupSoundCard[i]);
-	}
-	JE_skipCryptLn(f); JE_skipCryptLn(f);
-
-	for (i = 0; i < 3; i++)
-	{
-		JE_readCryptLn(f, setupDMACard[i]);
-	}
-	JE_skipCryptLn(f); JE_skipCryptLn(f);
-
-	for (i = 0; i < 3; i++)
-	{
-		JE_readCryptLn(f, setupDMAHelp[i]);
-	}
-	JE_skipCryptLn(f); JE_skipCryptLn(f);
-
-	for (i = 0; i < 6; i++)
-	{
-		JE_readCryptLn(f, mouseSelChoice[i]);
-	}
-	JE_skipCryptLn(f); JE_skipCryptLn(f);
-
-	for (i = 0; i < 3; i++)
-	{
-		JE_readCryptLn(f, licInfo[i]);
-	}
-	JE_skipCryptLn(f); JE_skipCryptLn(f);
-
-	for (i = 0; i < 39; i++)
-	{
-		JE_readCryptLn(f, licInfoB[i]);
-	}
-	JE_skipCryptLn(f); JE_skipCryptLn(f);
-
-	for (i = 0; i < 10; i++)
-	{
-		JE_readCryptLn(f, licInfoC[i]);
-	}
-	JE_skipCryptLn(f); JE_skipCryptLn(f);
-
-	for (i = 0; i < 6; i++)
-	{
-		JE_readCryptLn(f, orderInfo[i]);
-	}
-	JE_skipCryptLn(f); JE_skipCryptLn(f);
-
-	for (i = 0; i < 6; i++)
-	{
-		JE_readCryptLn(f, lastSection[i]);
-	#endif
 	}
 
 	fclose(f);
