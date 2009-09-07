@@ -13,11 +13,12 @@ GP2X_CHAIN := $(GP2X_CHAINPREFIX)/bin/arm-open2x-linux-
 # END SETTINGS #####################################
 
 TARGET := tyrian
-OBJS := animlib.o backgrnd.o config.o destruct.o editship.o episodes.o file.o fm_synth.o fmopl.o fonthand.o game_menu.o helptext.o joystick.o jukebox.o keyboard.o lds_play.o loudness.o lvllib.o lvlmast.o mainint.o menus.o mtrand.o musmast.o network.o newshape.o nortsong.o nortvars.o opentyr.o palette.o params.o pcxload.o pcxmast.o picload.o scroller.o setup.o sndmast.o starlib.o sizebuf.o tyrian2.o varz.o vga256d.o video.o video_scale.o xmas.o
+OBJS := animlib.o backgrnd.o config.o destruct.o editship.o episodes.o file.o fm_synth.o fmopl.o fonthand.o game_menu.o helptext.o joystick.o jukebox.o keyboard.o lds_play.o loudness.o lvllib.o lvlmast.o mainint.o menus.o mtrand.o musmast.o network.o newshape.o nortsong.o nortvars.o opentyr.o palette.o params.o pcxload.o pcxmast.o picload.o scroller.o setup.o sndmast.o starlib.o sizebuf.o tyrian2.o varz.o vga256d.o vga_palette.o video.o video_scale.o xmas.o
 
 STRIP := strip
 
-CFLAGS += --std=c99 -pedantic -Wall -Wstrict-prototypes -Wold-style-definition -Wmissing-declarations -I$(CURDIR)/src/
+CFLAGS += --std=c99 -pedantic -Wall -I$(CURDIR)/src/
+CFLAGS += -Wstrict-prototypes -Wold-style-definition -Wmissing-declarations -Wunused-parameter
 LDFLAGS += -lm
 
 ifeq ($(PLATFORM), UNIX)
@@ -50,7 +51,7 @@ LDFLAGS += $(SDL_LDFLAGS)
 DEBUG := 1
 
 DEBUG_FLAGS_0 := -g -O2 -DNDEBUG -fno-strict-aliasing
-DEBUG_FLAGS_1 := -g3 -O0 -Werror
+DEBUG_FLAGS_1 := -g3 -O0 
 
 SVN_REV := $(shell svnversion src -n)
 ifneq ($(SVN_REV), )

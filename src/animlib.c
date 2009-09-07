@@ -171,7 +171,7 @@ int JE_renderFrame( unsigned int framenumber )
 	return (JE_playRunSkipDump(CurrentPageBuffer + offset + 4, CurrentPageRecordSizes[destframe] - 4));
 }
 
-void JE_playAnim( JE_char *animfile, JE_byte startingframe, JE_boolean keyhalt, JE_byte speed )
+void JE_playAnim( JE_char *animfile, JE_byte startingframe, JE_byte speed )
 {
 	unsigned int i;
 	int pageNum;
@@ -339,7 +339,9 @@ int JE_playRunSkipDump( Uint8 *incomingBuffer, unsigned int IncomingBufferLength
 	opcode = value = count = 0;
 
 
-	/* 320x200 is the only supported format.  Assert is here to remind people if our screen size ever changes */
+	/* 320x200 is the only supported format.
+	 * Assert is here as a hint should our screen size ever changes.
+	 * As for how to decompress to the wrong screen size... */
 	assert(VGAScreen->h * VGAScreen->pitch == 320 * 200);
 
 

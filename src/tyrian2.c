@@ -857,7 +857,7 @@ start_level_first:
 
 	JE_showVGA();
 	JE_gammaCorrect(&colors, gammaCorrection);
-	JE_fadeColor(50);
+	fade_palette(colors, 50, 0, 255);
 
 	JE_loadCompShapes(&shapes6, &shapes6Size, '6'); /* Explosions */
 
@@ -2077,7 +2077,7 @@ draw_player_shot_loop_end:
 							case 1:
 								if (playerInvulnerable1 == 0)
 								{
-									if ((temp = JE_playerDamage(tempX, tempY, temp, &PX, &PY, &playerAlive, &playerStillExploding, &armorLevel, &shield)) > 0)
+									if ((temp = JE_playerDamage(temp, &PX, &PY, &playerAlive, &playerStillExploding, &armorLevel, &shield)) > 0)
 									{
 										lastTurn2 += (enemyShot[z].sxm * temp) / 2;
 										lastTurn  += (enemyShot[z].sym * temp) / 2;
@@ -2087,7 +2087,7 @@ draw_player_shot_loop_end:
 							case 2:
 								if (playerInvulnerable2 == 0)
 								{
-									if ((temp = JE_playerDamage(tempX, tempY, temp, &PXB, &PYB, &playerAliveB, &playerStillExploding2, &armorLevel2, &shield2)) > 0)
+									if ((temp = JE_playerDamage(temp, &PXB, &PYB, &playerAliveB, &playerStillExploding2, &armorLevel2, &shield2)) > 0)
 									{
 										lastTurn2B += (enemyShot[z].sxm * temp) / 2;
 										lastTurnB  += (enemyShot[z].sym * temp) / 2;
@@ -2837,7 +2837,7 @@ new_game:
 						switch (s[1])
 						{
 							case 'A':
-								JE_playAnim("tyrend.anm", 0, true, 7);
+								JE_playAnim("tyrend.anm", 0, 7);
 								break;
 
 							case 'G':
@@ -3042,7 +3042,7 @@ new_game:
 								if (!constantPlay)
 									JE_displayText();
 
-								JE_fadeBlack(15);
+								fade_black(15);
 
 								JE_nextEpisode();
 
@@ -3087,7 +3087,7 @@ new_game:
 										JE_dString(JE_fontCenter(buffer, SMALL_FONT_SHAPES), 160, buffer, SMALL_FONT_SHAPES);
 										JE_showVGA();
 
-										JE_fadeColor(50);
+										fade_palette(colors, 50, 0, 255);
 
 										if (!constantPlay)
 											wait_input(true, true, true);
@@ -3099,7 +3099,7 @@ new_game:
 										JE_readTextSync();
 
 									if (superTyrian)
-										JE_fadeBlack(10);
+										fade_black(10);
 								}
 								break;
 
@@ -3112,7 +3112,7 @@ new_game:
 										memcpy(colors, palettes[pcxpal[tempX-1 - 900]], sizeof(colors));
 										JE_clr256();
 										JE_showVGA();
-										JE_fadeColor(1);
+										fade_palette(colors, 1, 0, 255);
 									} else {
 										if (tempX == 0)
 										{
@@ -3121,7 +3121,7 @@ new_game:
 											JE_loadPic(tempX, false);
 										}
 										JE_showVGA();
-										JE_fadeColor(10);
+										fade_palette(colors, 10, 0, 255);
 									}
 								}
 								break;
@@ -3147,7 +3147,7 @@ new_game:
 
 											setjasondelay(1); /* attempting to emulate JE_waitRetrace();*/
 
-											for (y = 0; y < 199; y++)
+											for (y = 0; y <= 199; y++)
 											{
 												if (y <= z)
 												{
@@ -3274,7 +3274,7 @@ new_game:
 							case 'C':
 								if (!isNetworkGame)
 								{
-									JE_fadeBlack(10);
+									fade_black(10);
 								}
 								JE_clr256();
 								JE_showVGA();
@@ -3285,14 +3285,14 @@ new_game:
 							case 'B':
 								if (!isNetworkGame)
 								{
-									JE_fadeBlack(10);
+									fade_black(10);
 								}
 								break;
 							case 'F':
 								if (!isNetworkGame)
 								{
-									JE_fadeWhite(100);
-									JE_fadeBlack(30);
+									fade_white(100);
+									fade_black(30);
 								}
 								JE_clr256();
 								JE_showVGA();
@@ -3600,14 +3600,14 @@ const int menunum = 6;
 		memcpy(VGAScreen2->pixels, VGAScreen->pixels, VGAScreen2->pitch * VGAScreen2->h);
 		JE_dString(JE_fontCenter("Waiting for other player.", SMALL_FONT_SHAPES), 140, "Waiting for other player.", SMALL_FONT_SHAPES);
 		JE_showVGA();
-		JE_fadeColor(10);
+		fade_palette(colors, 10, 0, 255);
 
 		network_connect();
 
 		twoPlayerMode = true;
 		if (thisPlayerNum == 1)
 		{
-			JE_fadeBlack(10);
+			fade_black(10);
 
 			if (select_episode() && select_difficulty())
 			{
@@ -3652,7 +3652,7 @@ const int menunum = 6;
 			JE_initEpisode(SDLNet_Read16(&packet_in[0]->data[4]));
 			difficultyLevel = SDLNet_Read16(&packet_in[0]->data[6]);
 			initialDifficulty = difficultyLevel - 1;
-			JE_fadeBlack(10);
+			fade_black(10);
 
 			network_update();
 		}
@@ -3688,7 +3688,7 @@ const int menunum = 6;
 				{
 					if (fadeIn)
 					{
-						JE_fadeBlack(10);
+						fade_black(10);
 						fadeIn = false;
 					}
 
@@ -3833,7 +3833,7 @@ const int menunum = 6;
 							JE_outText(10, 20, "Difficulty level has been set to Lord of Game.", 15, 4);
 						else
 							JE_outText(10, 20, "Difficulty level has been set to Suicide.", 15, 4);
-						JE_outText(10, 30, "It is imperitive that you discover the special codes.", 15, 4);
+						JE_outText(10, 30, "It is imperative that you discover the special codes.", 15, 4);
 						if (initialDifficulty == 8)
 							JE_outText(10, 40, "(Next time, for an easier challenge hold down SCROLL LOCK.)", 15, 4);
 						JE_outText(10, 60, "Prepare to play...", 15, 4);
@@ -3846,6 +3846,7 @@ const int menunum = 6;
 						JE_playSampleNum(V_DANGER);
 						JE_showVGA();
 
+						wait_noinput(true, true, true);
 						wait_input(true, true, true);
 
 						JE_initEpisode(1);
@@ -3863,11 +3864,11 @@ const int menunum = 6;
 					{
 						pItems[P_SHIP] = SAShip[i];
 
-						JE_fadeBlack(10);
+						fade_black(10);
 						if (select_episode() && select_difficulty())
 						{
 							/* Start special mode! */
-							JE_fadeBlack(10);
+							fade_black(10);
 							JE_loadPic(1, false);
 							JE_clr256();
 							JE_dString(JE_fontCenter(superShips[0], FONT_SHAPES), 30, superShips[0], FONT_SHAPES);
@@ -3877,7 +3878,7 @@ const int menunum = 6;
 								JE_drawShape2x2(148, 70, tempW, shapes9);
 
 							JE_showVGA();
-							JE_fadeColor(50);
+							fade_palette(colors, 50, 0, 255);
 
 							wait_input(true, true, true);
 
@@ -3919,7 +3920,7 @@ const int menunum = 6;
 						switch (menu)
 						{
 							case 0: /* New game */
-								JE_fadeBlack(10);
+								fade_black(10);
 								if (select_gameplay())
 								{
 									if (select_episode() && select_difficulty())
@@ -3966,6 +3967,11 @@ const int menunum = 6;
 											case 4:
 												score = 30000;
 												break;
+										#ifdef TYRIAN2000
+											case 5:
+												score = 35000;
+												break;
+										#endif
 										}
 									}
 								}
@@ -4014,7 +4020,7 @@ const int menunum = 6;
 		while (!(quit || gameLoaded || jumpSection || play_demo || loadDestruct));
 
 	trentWinsGame:
-		JE_fadeBlack(15);
+		fade_black(15);
 		if (quit)
 			JE_tyrianHalt(0);
 
@@ -4024,28 +4030,27 @@ const int menunum = 6;
 void intro_logos( void )
 {
 	SDL_FillRect(VGAScreen, NULL, 0);
-
-	SDL_Color white = { 255, 255, 255 };
-	fade_solid(&white, 50, 0, 255);
-
+	
+	fade_white(50);
+	
 	JE_loadPic(10, false);
 	JE_showVGA();
-
+	
 	fade_palette(colors, 50, 0, 255);
-
+	
 	setjasondelay(200);
 	wait_delayorinput(true, true, true);
-
+	
 	fade_black(10);
-
+	
 	JE_loadPic(12, false);
 	JE_showVGA();
-
+	
 	fade_palette(colors, 10, 0, 255);
-
+	
 	setjasondelay(200);
 	wait_delayorinput(true, true, true);
-
+	
 	fade_black(10);
 }
 
@@ -5421,6 +5426,7 @@ void JE_eventSystem( void )
 void JE_whoa( void )
 {
 	unsigned int i, j, color, offset, timer;
+	unsigned int screenSize, topBorder, bottomBorder;
 	Uint8 * TempScreen1, * TempScreen2, * TempScreenSwap;
 
 
@@ -5430,16 +5436,30 @@ void JE_whoa( void )
 	 * This could probably be a lot more efficient (there's probably a
 	 * way to get vgascreen as one of the temp buffers), but it's only called
 	 * once so don't worry about it. */
-	TempScreen1 = game_screen->pixels;
-	TempScreen2 = VGAScreen2->pixels;
 
-	memset(TempScreen1, 0, 64000);
-	memcpy(TempScreen2, VGAScreen->pixels, 64000);
+	TempScreen1  = game_screen->pixels;
+	TempScreen2  = VGAScreen2->pixels;
+
+	screenSize   = VGAScreen->h * VGAScreen->pitch;
+	topBorder    = VGAScreen->pitch * 4; /* Seems an arbitrary number of lines */
+	bottomBorder = VGAScreen->pitch * 7;
+
+	/* Okay, one disadvantage to using other screens as temp buffers: they
+	 * need to be the right size.  I doubt they'l ever be anything but 320x200,
+	 * but just in case, these asserts will clue in whoever stumbles across
+	 * the problem.  You can fix it with the stack or malloc. */
+	assert( VGAScreen2->h *  VGAScreen2->pitch >= screenSize
+	    && game_screen->h * game_screen->pitch >= screenSize);
 
 
-	/* Clear the top and bottom borders.  We don't blit them otherwise. */
-	memset((Uint8 *)VGAScreen->pixels + 63040, 0, 2240);
-	memset(VGAScreen->pixels, 0, 1280);
+	/* Clear the top and bottom borders.  We don't want to process
+	 * them and we don't want to draw them. */
+	memset((Uint8 *)VGAScreen->pixels, 0, topBorder);
+	memset((Uint8 *)VGAScreen->pixels + screenSize - bottomBorder, 0, bottomBorder);
+
+	/* Copy our test subject to one of the temporary buffers.  Blank the other */
+	memset(TempScreen1, 0, screenSize);
+	memcpy(TempScreen2, VGAScreen->pixels, VGAScreen->h * VGAScreen->pitch);
 
 
 	service_SDL_events(true);
@@ -5450,23 +5470,22 @@ void JE_whoa( void )
 		setjasondelay(1);
 
 		/* This gets us our 'whoa' effect with pixel bleeding magic.
-		 * I'm willing to bet no one knows exactly how it works; the guy
-		 * who originally wrote it in asm was probably goofing around.
-		 * And on acid.  So it looked good enough to use. */
-		for (i = 64000 - 1280, j = 640; i > 0; i--, j++)
+		 * I'm willing to bet the guy who originally wrote the asm was goofing
+		 * around on acid and thought this looked good enough to use. */
+		for (i = screenSize - bottomBorder, j = topBorder / 2; i > 0; i--, j++)
 		{
 			offset = j + i/8192 - 4;
-			color = (TempScreen2[offset    ] * 12 +
-			         TempScreen1[offset-320]      +
-			         TempScreen1[offset-  1]      +
-			         TempScreen1[offset+  1]      +
-			         TempScreen1[offset+320]) / 16;
+			color = (TempScreen2[offset                 ] * 12 +
+			         TempScreen1[offset-VGAScreen->pitch]      +
+			         TempScreen1[offset-1               ]      +
+			         TempScreen1[offset+1               ]      +
+			         TempScreen1[offset+VGAScreen->pitch]) / 16;
 
 			TempScreen1[j] = color;
 		}
 
 		/* Now copy that mess to the buffer. */
-		memcpy((Uint8 *)VGAScreen->pixels + 1280, TempScreen1 + 1280, 64000 - 2240);
+		memcpy((Uint8 *)VGAScreen->pixels + topBorder, TempScreen1 + topBorder, screenSize - bottomBorder);
 
 		JE_showVGA();
 

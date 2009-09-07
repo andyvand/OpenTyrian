@@ -752,11 +752,7 @@ void JE_itemScreen( void )
 					newPal = 0;
 					
 					for (temp = 1; temp <= 255 - (3 * 16); temp++)
-					{
-						colors[temp].r = palettes[temp2][temp].r;
-						colors[temp].g = palettes[temp2][temp].g;
-						colors[temp].b = palettes[temp2][temp].b;
-					}
+						colors[temp] = palettes[temp2][temp];
 				}
 			}
 		}
@@ -891,7 +887,7 @@ void JE_itemScreen( void )
 					
 					if (backFromHelp)
 					{
-						JE_fadeColor(10);
+						fade_palette(colors, 10, 0, 255);
 						backFromHelp = false;
 					}
 					JE_mouseReplace();
@@ -945,7 +941,7 @@ void JE_itemScreen( void )
 
 						if (backFromHelp)
 						{
-							JE_fadeColor(10);
+							fade_palette(colors, 10, 0, 255);
 							backFromHelp = false;
 						}
 
@@ -979,7 +975,7 @@ void JE_itemScreen( void )
 
 						if (backFromHelp)
 						{
-							JE_fadeColor(10);
+							fade_palette(colors, 10, 0, 255);
 							backFromHelp = false;
 						}
 						
@@ -1309,7 +1305,7 @@ void JE_itemScreen( void )
 				if (!isNetworkGame)
 				{
 					JE_helpSystem(2);
-					JE_fadeBlack(10);
+					fade_black(10);
 					
 					play_song(songBuy);
 					
@@ -1638,7 +1634,7 @@ void JE_itemScreen( void )
 	}
 	
 	if (gameLoaded)
-		JE_fadeBlack(10);
+		fade_black(10);
 }
 
 void draw_ship_illustration( void )
@@ -2243,8 +2239,6 @@ void JE_initWeaponView( void )
 	PY    = 110;
 	PXChange = 0;
 	PYChange = 0;
-	lastPX = 72;
-	lastPY = 110;
 	lastPX2 = 72;
 	lastPY2 = 110;
 	power = 500;
@@ -3065,7 +3059,7 @@ void JE_weaponSimUpdate( void )
 {
 	char buf[32];
 	
-	JE_weaponViewFrame(0);
+	JE_weaponViewFrame();
 	
 	if ( (curSel[1] == 3 && curSel[4] < menuChoices[4]) || (curSel[1] == 4 && curSel[4] < menuChoices[4] - 1) )
 	{
@@ -3123,7 +3117,7 @@ void JE_weaponSimUpdate( void )
 	JE_drawItem(1, pItems[12 - 1], PX - 5, PY - 7);
 }
 
-void JE_weaponViewFrame( JE_byte testshotnum )
+void JE_weaponViewFrame( void )
 {
 	Uint8 *s; /* screen pointer, 8-bit specific */
 	int i;

@@ -20,7 +20,7 @@
 #include "lvllib.h"
 #include "opentyr.h"
 
-JE_LvlPosType lvlPos; /* array of 42 ints */
+JE_LvlPosType lvlPos; /* array of 42 ints , probabily the maximum number of levels*/
 
 char levelFile[13]; /* string [12] */
 JE_word lvlNum;

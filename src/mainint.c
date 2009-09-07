@@ -41,7 +41,6 @@
 #include "pcxmast.h"
 #include "picload.h"
 #include "setup.h"
-#include "shpmast.h"
 #include "sndmast.h"
 #include "varz.h"
 #include "vga256d.h"
@@ -49,6 +48,8 @@
 
 #include <assert.h>
 #include <ctype.h>
+
+#define SHP_NUM 12
 
 bool button[4];
 
@@ -188,13 +189,13 @@ void JE_helpSystem( JE_byte startTopic )
 
 	page = topicStart[startTopic-1];
 
-	JE_fadeBlack(10);
+	fade_black(10);
 	JE_loadPic(2, false);
 	
 	play_song(SONG_MAPVIEW);
 	
 	JE_showVGA();
-	JE_fadeColor(10);
+	fade_palette(colors, 10, 0, 255);
 
 	memcpy(VGAScreen2->pixels, VGAScreen->pixels, VGAScreen2->pitch * VGAScreen2->h);
 
@@ -437,9 +438,10 @@ void JE_loadMainShapeTables( const char *shpfile )
 	FILE *f = dir_fopen_die(data_dir(), shpfile, "rb");
 	
 	JE_word shpNumb;
-	JE_longint shpPos[shpNumb+1]; // number of texture banks +1 for file length
+	JE_longint shpPos[SHP_NUM + 1]; // +1 for storing file length , SHP_NUM defined to be 12
+	
 	efread(&shpNumb, sizeof(JE_word), 1, f);
-
+//	assert(shpNumb + 1 <= COUNTOF(shpPos));
 	
 	for (int i = 0; i < shpNumb; i++)
 	{
@@ -571,10 +573,10 @@ void JE_loadScreen( void )
 
 	tempstr = NULL;
 
-	JE_fadeBlack(10);
+	fade_black(10);
 	JE_loadPic(2, false);
 	JE_showVGA();
-	JE_fadeColor(10);
+	fade_palette(colors, 10, 0, 255);
 
 	screen = 1;
 	sel = 1;
@@ -762,7 +764,7 @@ void JE_loadScreen( void )
 	} while (!quit);
 }
 
-JE_longint JE_totalScore( JE_longint score, JE_PItemsType pitems )
+JE_longint JE_totalScore( JE_longint score, JE_PItemsType pItems )
 {
 	long temp = score;
 	
@@ -867,7 +869,7 @@ void JE_nextEpisode( void )
 	JE_dString(JE_fontCenter(miscText[5-1], SMALL_FONT_SHAPES), 185, miscText[5-1], SMALL_FONT_SHAPES);
 	
 	JE_showVGA();
-	JE_fadeColor(15);
+	fade_palette(colors, 15, 0, 255);
 	
 	JE_wipeKey();
 	if (!constantPlay)
@@ -880,7 +882,7 @@ void JE_nextEpisode( void )
 		} while (!JE_anyButton());
 	}
 	
-	JE_fadeBlack(15);
+	fade_black(15);
 }
 
 void JE_initPlayerData( void )
@@ -953,10 +955,10 @@ void JE_highScoreScreen( void )
 	int quit;
 	char scoretemp[32];
 
-	JE_fadeBlack(10);
+	fade_black(10);
 	JE_loadPic(2, false);
 	JE_showVGA();
-	JE_fadeColor(10);
+	fade_palette(colors, 10, 0, 255);
 	tempScreenSeg = VGAScreen;
 	
 	quit = false;
@@ -1631,7 +1633,7 @@ void JE_highScoreCheck( void )
 							JE_showVGA();
 							if (fadein)
 							{
-								JE_fadeColor (15);
+								fade_palette(colors, 15, 0, 255);
 								fadein = false;
 							}
 							JE_mouseReplace();
@@ -1723,7 +1725,7 @@ void JE_highScoreCheck( void )
 					saveFiles[slot].highScoreDiff = difficultyLevel;
 				}
 				
-				JE_fadeBlack(15);
+				fade_black(15);
 				JE_loadPic(2, false);
 				
 				JE_dString(JE_fontCenter(miscText[50], FONT_SHAPES), 10, miscText[50], FONT_SHAPES);
@@ -1741,7 +1743,7 @@ void JE_highScoreCheck( void )
 				
 				JE_showVGA();
 				
-				JE_fadeColor(15);
+				fade_palette(colors, 15, 0, 255);
 				
 				sprintf(buffer, "~#%d:~  %d", (slot - first_slot + 1), saveFiles[slot].highScore1);
 				
@@ -1760,7 +1762,7 @@ void JE_highScoreCheck( void )
 				if (frameCountMax != 0)
 					wait_input(true, true, true);
 				
-				JE_fadeBlack(15);
+				fade_black(15);
 			}
 			
 		}
@@ -2074,7 +2076,7 @@ void JE_playCredits( void )
 	memcpy(colors, palettes[6-1], sizeof(colors));
 	JE_clr256();
 	JE_showVGA();
-	JE_fadeColor(2);
+	fade_palette(colors, 2, 0, 255);
 	
 	tempScreenSeg = VGAScreenSeg;
 	
@@ -2203,7 +2205,7 @@ void JE_playCredits( void )
 		}
 	}
 	
-	JE_fadeBlack(10);
+	fade_black(10);
 	
 	JE_newPurgeShapes(EXTRA_SHAPES);
 }
@@ -2369,7 +2371,7 @@ void JE_endLevelAni( void )
 	
 	wait_noinput(false, false, true); // TODO: should up the joystick repeat temporarily instead
 	
-	JE_fadeBlack(15);
+	fade_black(15);
 	JE_clr256();
 }
 
@@ -2411,7 +2413,6 @@ bool str_pop_int( char *str, int *val )
 void JE_operation( JE_byte slot )
 {
 	JE_byte flash;
-	JE_boolean quit;
 	char stemp[21];
 	char tempStr[51];
 	
@@ -2422,12 +2423,10 @@ void JE_operation( JE_byte slot )
 			gameJustLoaded = true;
 			JE_loadGame(slot);
 			gameLoaded = true;
-			quit = true;
 		}
 	}
 	else if (slot % 11 != 0)
 	{
-		quit = false;
 		strcpy(stemp, "              ");
 		memcpy(stemp, saveFiles[slot-1].name, strlen(saveFiles[slot-1].name));
 		temp = strlen(stemp);
@@ -2439,7 +2438,8 @@ void JE_operation( JE_byte slot )
 		
 		JE_barShade(65, 55, 255, 155);
 		
-		do
+		bool quit = false;
+		while (!quit)
 		{
 			service_SDL_events(true);
 			
@@ -2552,7 +2552,6 @@ void JE_operation( JE_byte slot )
 				
 			}
 		}
-		while (!quit);
 	}
 	
 	wait_noinput(false, true, false);
@@ -3005,10 +3004,9 @@ void JE_playerMovement( JE_byte inputDevice,
                         JE_shortint *shield_, JE_shortint *shieldMax_,
                         JE_word *playerInvulnerable_,
                         JE_integer *PX_, JE_integer *PY_,
-                        JE_integer *lastPX_, JE_integer *lastPY_,
                         JE_integer *lastPX2_, JE_integer *lastPY2_,
                         JE_integer *PXChange_, JE_integer *PYChange_,
-                        JE_integer *lastTurn_, JE_integer *lastTurn2_, JE_integer *tempLastTurn2_,
+                        JE_integer *lastTurn_, JE_integer *lastTurn2_,
                         JE_byte *stopWaitX_, JE_byte *stopWaitY_,
                         JE_word *mouseX_, JE_word *mouseY_,
                         JE_boolean *playerAlive_,
@@ -4314,16 +4312,16 @@ void JE_mainGamePlayerFunctions( void )
 		                  &armorLevel, &baseArmor,
 		                  &shield, &shieldMax,
 		                  &playerInvulnerable1,
-		                  &PX, &PY, &lastPX, &lastPY, &lastPX2, &lastPY2, &PXChange, &PYChange,
-		                  &lastTurn, &lastTurn2, &tempLastTurn2, &stopWaitX, &stopWaitY,
+		                  &PX, &PY, &lastPX2, &lastPY2, &PXChange, &PYChange,
+		                  &lastTurn, &lastTurn2, &stopWaitX, &stopWaitY,
 		                  &mouseX, &mouseY,
 		                  &playerAlive, &playerStillExploding, pItems);
 		JE_playerMovement(!galagaMode ? inputDevice[1] : 0, 2, shipGr2, shipGr2ptr,
 		                  &armorLevel2, &baseArmor2,
 		                  &shield2, &shieldMax2,
 		                  &playerInvulnerable2,
-		                  &PXB, &PYB, &lastPXB, &lastPYB, &lastPX2B, &lastPY2B, &PXChangeB, &PYChangeB,
-		                  &lastTurnB, &lastTurn2B, &tempLastTurn2B, &stopWaitXB, &stopWaitYB,
+		                  &PXB, &PYB, &lastPX2B, &lastPY2B, &PXChangeB, &PYChangeB,
+		                  &lastTurnB, &lastTurn2B, &stopWaitXB, &stopWaitYB,
 		                  &mouseXB, &mouseYB,
 		                  &playerAliveB, &playerStillExploding2, pItemsPlayer2);
 	} else {
@@ -4331,8 +4329,8 @@ void JE_mainGamePlayerFunctions( void )
 		                  &armorLevel, &baseArmor,
 		                  &shield, &shieldMax,
 		                  &playerInvulnerable1,
-		                  &PX, &PY, &lastPX, &lastPY, &lastPX2, &lastPY2, &PXChange, &PYChange,
-		                  &lastTurn, &lastTurn2, &tempLastTurn2, &stopWaitX, &stopWaitY,
+		                  &PX, &PY, &lastPX2, &lastPY2, &PXChange, &PYChange,
+		                  &lastTurn, &lastTurn2, &stopWaitX, &stopWaitY,
 		                  &mouseX, &mouseY,
 		                  &playerAlive, &playerStillExploding, pItems);
 	}
@@ -4692,7 +4690,7 @@ void JE_playerCollide( JE_integer *PX_, JE_integer *PY_, JE_integer *lastTurn_, 
 					if (tempI3 > damageRate)
 						tempI3 = damageRate;
 					
-					JE_playerDamage(tempW, tempW, tempI3, PX_, PY_, playerAlive_, playerStillExploding_, armorLevel_, shield_);
+					JE_playerDamage(tempI3, PX_, PY_, playerAlive_, playerStillExploding_, armorLevel_, shield_);
 					
 					if (enemy[z].armorleft > 0)
 					{
