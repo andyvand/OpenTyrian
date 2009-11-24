@@ -40,6 +40,7 @@
 #include "params.h"
 #include "pcxmast.h"
 #include "picload.h"
+#include "player.h"
 #include "setup.h"
 #include "sndmast.h"
 #include "sprite.h"
@@ -172,12 +173,12 @@ void JE_drawPortConfigButtons( void ) // rear weapon pattern indicator
 	if (twoPlayerMode)
 		return;
 	
-	if (portConfig[1] == 1)
+	if (player[0].weapon_mode == 1)
 	{
 		blit_sprite(VGAScreenSeg, 285, 44, OPTION_SHAPES, 18);  // lit
 		blit_sprite(VGAScreenSeg, 302, 44, OPTION_SHAPES, 19);  // unlit
 	}
-	else
+	else // == 2
 	{
 		blit_sprite(VGAScreenSeg, 285, 44, OPTION_SHAPES, 19);  // unlit
 		blit_sprite(VGAScreenSeg, 302, 44, OPTION_SHAPES, 18);  // lit
@@ -429,12 +430,14 @@ void JE_helpSystem( JE_byte startTopic )
 	} while (lastkey_sym != SDLK_ESCAPE);
 }
 
+// cost to upgrade a weapon power from power-1 (where power == 0 indicates an unupgraded weapon)
 long weapon_upgrade_cost( long base_cost, unsigned int power )
 {
 	assert(power <= 11);
 	
 	unsigned int temp = 0;
 	
+	// 0 1 3 6 10 15 21 29 ...
 	for (; power > 0; power--)
 		temp += power;
 	
@@ -453,8 +456,12 @@ JE_longint JE_getCost( JE_byte itemType, JE_word itemNum )
 	case 3:
 	case 4:
 		cost = weaponPort[itemNum].cost;
-		downgradeCost = weapon_upgrade_cost(cost, portPower[itemType-3] - 1);
-		upgradeCost = weapon_upgrade_cost(cost, portPower[itemType-3]);
+		
+		const uint port = itemType - 3,
+		           item_power = player[0].items.weapon[port].power - 1;
+		
+		downgradeCost = weapon_upgrade_cost(cost, item_power);
+		upgradeCost = weapon_upgrade_cost(cost, item_power + 1);
 		break;
 	case 5:
 		cost = shields[itemNum].cost;
@@ -702,9 +709,14 @@ JE_longint JE_getValue( JE_byte itemType, JE_word itemNum )
 		break;
 	case 3:
 	case 4:;
-		long base_value = weaponPort[itemNum].cost;
+		const long base_value = weaponPort[itemNum].cost;
+		
+		// if two-player, use first player's front and second player's rear weapon
+		const uint port = itemType - 3;
+		const uint item_power = player[twoPlayerMode ? port : 0].items.weapon[port].power - 1;
+		
 		value = base_value;
-		for (unsigned int i = 1; i < portPower[itemType-3]; i++)
+		for (unsigned int i = 1; i <= item_power; ++i)
 			value += weapon_upgrade_cost(base_value, i);
 		break;
 	case 5:
@@ -755,8 +767,10 @@ void JE_nextEpisode( void )
 			pItems[P_FRONT] = 23;
 			pItems[P_REAR] = 24;
 			pItems[P_SHIP] = 2;
-			portPower[1-1] = 1;
-			portPower[2-1] = 1;
+			
+			for (uint i = 0; i < COUNTOF(player->items.weapon); ++i)
+				player[0].items.weapon[i].power = 1;
+			
 			pItemsPlayer2[P_REAR] = 24;
 			memcpy(pItemsBack2, pItems, sizeof(pItemsBack2));
 		}
@@ -833,11 +847,18 @@ void JE_initPlayerData( void )
 	
 	armorLevel = ships[pItems[P_SHIP]].dmg;
 	
-	portPower[0] = 1;
-	portPower[1] = 1;
-	
-	portConfig[0] = 1;
-	portConfig[1] = 1;
+	for (uint p = 0; p < COUNTOF(player); ++p)
+	{
+		for (uint i = 0; i < COUNTOF(player->items.weapon); ++i)
+		{
+			player[p].items.weapon[i].power = 1;
+		}
+		
+		player[p].weapon_mode = 1;
+		player[p].is_dragonwing = (p == 1);
+		player[p].lives = &player[p].items.weapon[p].power;
+		
+	}
 	
 	mainLevel = FIRST_LEVEL;
 	saveLevel = FIRST_LEVEL;
@@ -1453,15 +1474,15 @@ void JE_highScoreCheck( void )
 		if (twoPlayerMode)
 		{
 			// ask for the highest scorer first
-			if (score < score2)
+			if (player[0].cash < player[1].cash)
 				p = (temp_p == 0) ? 1 : 0;
 			
-			temp_score = (p == 0) ? score : score2;
+			temp_score = (p == 0) ? player[0].cash : player[1].cash;
 		}
 		else
 		{
 			// single player highscore includes cost of upgrades
-			temp_score = JE_totalScore(score, pItems);
+			temp_score = JE_totalScore(player[0].cash, pItems);
 		}
 		
 		int slot;
@@ -1693,11 +1714,9 @@ void JE_changeDifficulty( void )
 	JE_longint temp;
 
 	if (twoPlayerMode)
-	{
-		temp = score + score2;
-	} else {
-		temp = JE_totalScore(score, pItems);
-	}
+		temp = player[0].cash + player[1].cash;
+	else
+		temp = JE_totalScore(player[0].cash, pItems);
 
 	switch (initialDifficulty)
 	{
@@ -1793,7 +1812,12 @@ bool load_next_demo( void )
 	efread(levelName, 1, 10, demo_file); levelName[10] = '\0';
 	lvlFileNum = fgetc(demo_file);
 	efread(pItems, sizeof(Uint8), 12, demo_file);
-	efread(portPower, sizeof(Uint8), 5, demo_file);
+	
+	for (uint i = 0; i < 2; ++i)
+		player[0].items.weapon[i].power = fgetc(demo_file);
+	
+	fseek(demo_file, 3, SEEK_CUR);
+	
 	levelSong = fgetc(demo_file);
 	
 	demo_keys_wait = 0;
@@ -2184,15 +2208,15 @@ void JE_endLevelAni( void )
 	
 	if (twoPlayerMode)
 	{
-		sprintf(tempStr, "%s %d", miscText[41-1], score);
-		JE_outTextGlow(30, 50, tempStr);
-		
-		sprintf(tempStr, "%s %d", miscText[42-1], score2);
-		JE_outTextGlow(30, 70, tempStr);
+		for (uint i = 0; i < 2; ++i)
+		{
+			snprintf(tempStr, sizeof(tempStr), "%s %lu", miscText[40 + i], player[i].cash);
+			JE_outTextGlow(30, 50 + 20 * i, tempStr);
+		}
 	}
 	else
 	{
-		sprintf(tempStr, "%s %d", miscText[28-1], score);
+		sprintf(tempStr, "%s %lu", miscText[28-1], player[0].cash);
 		JE_outTextGlow(30, 50, tempStr);
 	}
 	
@@ -2475,15 +2499,13 @@ void JE_inGameDisplays( void )
 	JE_byte temp;
 	
 	char tempstr[256];
-
-	sprintf(tempstr, "%d", score);
-	JE_textShade(30, 175, tempstr, 2, 4, FULL_SHADE);
-	if (twoPlayerMode && !galagaMode)
+	
+	for (uint i = 0; i < ((twoPlayerMode && !galagaMode) ? 2 : 1); ++i)
 	{
-		sprintf(tempstr, "%d", score2);
-		JE_textShade(230, 175, tempstr, 2, 4, FULL_SHADE);
+		snprintf(tempstr, sizeof(tempstr), "%lu", player[i].cash);
+		JE_textShade(30 + 200 * i, 175, tempstr, 2, 4, FULL_SHADE);
 	}
-
+	
 	/*Special Weapon?*/
 	if (pItems[P_SPECIAL] > 0)
 	{
@@ -2493,23 +2515,27 @@ void JE_inGameDisplays( void )
 	/*Lives Left*/
 	if (onePlayerAction || twoPlayerMode)
 	{
-		
 		for (temp = 0; temp < (onePlayerAction ? 1 : 2); temp++)
 		{
+			const uint extra_lives = *player[temp].lives - 1;
+			
 			temp5 = (temp == 0 && pItems[P_SPECIAL] > 0) ? 35 : 15;
 			tempW = (temp == 0) ? 30: 270;
 			
-			if (portPower[temp] > 5)
+			if (extra_lives >= 5)
 			{
 				blit_sprite2(VGAScreen, tempW, temp5, shapes9, 285);
 				tempW = (temp == 0) ? 45 : 250;
-				sprintf(tempstr, "%d", portPower[temp] - 1);
+				sprintf(tempstr, "%d", extra_lives);
 				JE_textShade(tempW, temp5 + 3, tempstr, 15, 1, FULL_SHADE);
-			} else if (portPower[temp] > 1) {
-				for (temp2 = 1; temp2 < portPower[temp]; temp2++)
+			}
+			else if (extra_lives >= 1)
+			{
+				for (uint i = 0; i < extra_lives; ++i)
 				{
 					blit_sprite2(VGAScreen, tempW, temp5, shapes9, 285);
-					tempW = (temp == 0) ? (tempW + 12) : (tempW - 12);
+					
+					tempW += (temp == 0) ? 12 : -12;
 				}
 			}
 			
@@ -2521,9 +2547,7 @@ void JE_inGameDisplays( void )
 			
 			tempW = (temp == 0) ? 28 : (285 - JE_textWidth(stemp, TINY_FONT));
 			JE_textShade(tempW, temp5 - 7, stemp, 2, 6, FULL_SHADE);
-			
 		}
-		
 	}
 
 	/*Super Bombs!!*/
@@ -2574,9 +2598,10 @@ void JE_mainKeyboardInput( void )
 					/*Armor*/
 					pItems[P_SHIELD] = extraShips[z + 8];
 					memset(shotMultiPos, 0, sizeof(shotMultiPos));
-					JE_portConfigs();
-					if (portConfig[1] > tempW)
-						portConfig[1] = 1;
+					
+					if (player[0].weapon_mode > JE_portConfigs())
+						player[0].weapon_mode = 1;
+					
 					tempW = armorLevel;
 					JE_getShipInfo();
 					if (armorLevel > tempW && editShip1)
@@ -2617,9 +2642,10 @@ void JE_mainKeyboardInput( void )
 					/*Armor*/
 					pItemsPlayer2[P_SHIELD] = extraShips[z + 8];
 					memset(shotMultiPos, 0, sizeof(shotMultiPos));
-					JE_portConfigs();
-					if (portConfig[1] > tempW)
-						portConfig[1] = 1;
+					
+					if (player[1].weapon_mode > JE_portConfigs())
+						player[1].weapon_mode = 1;
+					
 					tempW = armorLevel2;
 					JE_getShipInfo();
 					if (armorLevel2 > tempW && editShip2)
@@ -2905,7 +2931,8 @@ void JE_pauseGame( void )
 	//skipStarShowVGA = true;
 }
 
-void JE_playerMovement( JE_byte inputDevice,
+void JE_playerMovement( Player *this_player,
+                        JE_byte inputDevice,
                         JE_byte playerNum_,
                         JE_word shipGr_,
                         Sprite2_array *shapes9ptr_,
@@ -2929,16 +2956,10 @@ void JE_playerMovement( JE_byte inputDevice,
 
 	if (playerNum_ == 2 || !twoPlayerMode)
 	{
-		if (playerNum_ == 2)
-		{
-			tempW = weaponPort[pItemsPlayer2[P_REAR]].opnum;
-		} else {
-			tempW = weaponPort[pItems_[P_REAR]].opnum;
-		}
-		if (portConfig[2-1] > tempW)
-		{
-			portConfig[2-1] = 1;
-		}
+		tempW = (playerNum_ == 2) ? weaponPort[pItemsPlayer2[P_REAR]].opnum : weaponPort[pItems_[P_REAR]].opnum;
+		
+		if (this_player->weapon_mode > tempW)
+			this_player->weapon_mode = 1;
 	}
 
 	if (isNetworkGame && thisPlayerNum == playerNum_)
@@ -2992,13 +3013,14 @@ redo:
 		}
 		else
 		{
-			if (twoPlayerMode || onePlayerAction)
+			if (twoPlayerMode || onePlayerAction)  // if arcade mode
 			{
-				if (portPower[playerNum_-1] > 1)
+				if (*this_player->lives > 1)  // respawn if any extra lives
 				{
+					--(*this_player->lives);
+					
 					reallyEndLevel = false;
 					shotMultiPos[playerNum_-1] = 0;
-					portPower[playerNum_-1]--;
 					JE_calcPurpleBall(playerNum_);
 					twoPlayerLinked = false;
 					if (galagaMode)
@@ -3023,7 +3045,9 @@ redo:
 					JE_drawShield();
 					VGAScreen = game_screen; /* side-effect of game_screen */
 					goto redo;
-				} else {
+				}
+				else
+				{
 					if (galagaMode)
 						twoPlayerMode = false;
 					if (allPlayersGone && isNetworkGame)
@@ -3032,10 +3056,11 @@ redo:
 
 			}
 		}
-	} else if (constantDie)	{
+	}
+	else if (constantDie)
+	{
 		if (*playerStillExploding_ == 0)
 		{
-
 			*shield_ = 0;
 			if (*armorLevel_ > 0)
 			{
@@ -3050,8 +3075,10 @@ redo:
 			VGAScreen = VGAScreenSeg; /* side-effect of game_screen */
 			JE_drawArmor();
 			VGAScreen = game_screen; /* side-effect of game_screen */
-			if (portPower[1-1] < 11)
-				portPower[1-1]++;
+			
+			// as if instant death weren't enough, player also gets infinite lives in order to enjoy an infinite number of deaths -_-
+			if (*player[0].lives < 11)
+				++(*player[0].lives);
 		}
 	}
 
@@ -3756,21 +3783,16 @@ redo:
 								if (pItems[P_SPECIAL] == SASpecialWeapon[superArcadeMode-1])
 								{
 									pItems[P_SPECIAL] = SASpecialWeaponB[superArcadeMode-1];
-									portConfig[2-1] = 2;
+									this_player->weapon_mode = 2;
 								}
 								else
 								{
 									pItems[P_SPECIAL] = SASpecialWeapon[superArcadeMode-1];
-									portConfig[2-1] = 1;
+									this_player->weapon_mode = 1;
 								}
 							}
-							else
-							{
-								portConfig[2-1]++;
-								JE_portConfigs();
-								if (portConfig[2-1] > tempW)
-									portConfig[2-1] = 1;
-							}
+							else if (++this_player->weapon_mode > JE_portConfigs())
+								this_player->weapon_mode = 1;
 
 							JE_drawPortConfigButtons();
 							portConfigDone = false;
@@ -3790,30 +3812,36 @@ redo:
 						{
 							min = 1;
 							max = 2;
-						} else
+						}
+						else
+						{
 							switch (playerNum_)
 							{
-								case 1:
-									min = 1;
-									max = 1;
-									break;
-								case 2:
-									min = 2;
-									max = 2;
-									break;
+							case 1:
+								min = 1;
+								max = 1;
+								break;
+							case 2:
+								min = 2;
+								max = 2;
+								break;
 							}
-							for (temp = min - 1; temp < max; temp++)
-								if (pItems_[temp] > 0)
+						}
+						for (temp = min - 1; temp < max; temp++)
+						{
+							if (pItems_[temp] > 0)
+							{
+								if (shotRepeat[temp] > 0)
+									shotRepeat[temp]--;
+								else if (button[1-1])
 								{
-									if (shotRepeat[temp] > 0)
-										shotRepeat[temp]--;
-									else
-										if (button[1-1])
-											JE_initPlayerShot(pItems_[temp], temp + 1, *PX_, *PY_, *mouseX_, *mouseY_,
-											                  weaponPort[pItems_[temp]].op[portConfig[temp]-1]
-											                  [portPower[temp] * !galagaMode + galagaMode - 1],
-											                  playerNum_);
+									const uint item_power = galagaMode ? 0 : this_player->items.weapon[temp].power - 1,
+									           item_mode = (temp == REAR_WEAPON) ? this_player->weapon_mode - 1 : 0;
+									
+									JE_initPlayerShot(pItems_[temp], temp + 1, *PX_, *PY_, *mouseX_, *mouseY_, weaponPort[pItems_[temp]].op[item_mode][item_power], playerNum_);
 								}
+							}
+						}
 					}
 
 					/*Super Charge Weapons*/
@@ -3841,10 +3869,13 @@ redo:
 						if (chargeWait > 0)
 						{
 							chargeWait--;
-						} else {
+						}
+						else
+						{
 							if (chargeLevel < chargeMax)
 								chargeLevel++;
-							chargeWait = 28 - portPower[2-1] * 2;
+							
+							chargeWait = 28 - this_player->items.weapon[REAR_WEAPON].power * 2;
 							if (difficultyLevel > 3)
 								chargeWait -= 5;
 						}
@@ -3870,7 +3901,7 @@ redo:
 								}
 
 								chargeLevel = 0;
-								chargeWait = 30 - portPower[2-1] * 2;
+								chargeWait = 30 - this_player->items.weapon[REAR_WEAPON].power * 2;
 							}
 					}
 
@@ -4217,8 +4248,8 @@ void JE_mainGamePlayerFunctions( void )
 
 	if (twoPlayerMode)
 	{
-
-		JE_playerMovement(!galagaMode ? inputDevice[0] : 0, 1, shipGr, shipGrPtr,
+		JE_playerMovement(&player[0],
+		                  !galagaMode ? inputDevice[0] : 0, 1, shipGr, shipGrPtr,
 		                  &armorLevel, &baseArmor,
 		                  &shield, &shieldMax,
 		                  &playerInvulnerable1,
@@ -4226,7 +4257,8 @@ void JE_mainGamePlayerFunctions( void )
 		                  &lastTurn, &lastTurn2, &stopWaitX, &stopWaitY,
 		                  &mouseX, &mouseY,
 		                  &playerAlive, &playerStillExploding, pItems);
-		JE_playerMovement(!galagaMode ? inputDevice[1] : 0, 2, shipGr2, shipGr2ptr,
+		JE_playerMovement(&player[1],
+		                  !galagaMode ? inputDevice[1] : 0, 2, shipGr2, shipGr2ptr,
 		                  &armorLevel2, &baseArmor2,
 		                  &shield2, &shieldMax2,
 		                  &playerInvulnerable2,
@@ -4234,8 +4266,11 @@ void JE_mainGamePlayerFunctions( void )
 		                  &lastTurnB, &lastTurn2B, &stopWaitXB, &stopWaitYB,
 		                  &mouseXB, &mouseYB,
 		                  &playerAliveB, &playerStillExploding2, pItemsPlayer2);
-	} else {
-		JE_playerMovement(0, 1, shipGr, shipGrPtr,
+	}
+	else
+	{
+		JE_playerMovement(&player[0],
+		                  0, 1, shipGr, shipGrPtr,
 		                  &armorLevel, &baseArmor,
 		                  &shield, &shieldMax,
 		                  &playerInvulnerable1,
@@ -4285,8 +4320,9 @@ const char *JE_getName( JE_byte pnum )
 	return miscText[47 + pnum];
 }
 
-void JE_playerCollide( JE_integer *PX_, JE_integer *PY_, JE_integer *lastTurn_, JE_integer *lastTurn2_,
-                       JE_longint *score_, JE_integer *armorLevel_, JE_shortint *shield_, JE_boolean *playerAlive_,
+void JE_playerCollide( Player *this_player,
+                       JE_integer *PX_, JE_integer *PY_, JE_integer *lastTurn_, JE_integer *lastTurn2_,
+                       JE_integer *armorLevel_, JE_shortint *shield_, JE_boolean *playerAlive_,
                        JE_byte *playerStillExploding_, JE_byte playerNum_, JE_byte playerInvulnerable_ )
 {
 	char tempStr[256];
@@ -4304,7 +4340,7 @@ void JE_playerCollide( JE_integer *PX_, JE_integer *PY_, JE_integer *lastTurn_, 
 				{
 					if (tempI4 == 30000)
 					{
-						*score_ += 100;
+						this_player->cash += 100;
 						
 						if (!galagaMode)
 						{
@@ -4320,11 +4356,12 @@ void JE_playerCollide( JE_integer *PX_, JE_integer *PY_, JE_integer *lastTurn_, 
 						}
 						else
 						{
+							// spawn the dragonwing?
 							if (twoPlayerMode)
-								*score_ += 2400;
+								this_player->cash += 2400;
 							twoPlayerMode = true;
 							twoPlayerLinked = true;
-							portPower[2-1] = 1;
+							player[1].items.weapon[REAR_WEAPON].power = 1;
 							armorLevel2 = 10;
 							playerAliveB = true;
 						}
@@ -4340,8 +4377,8 @@ void JE_playerCollide( JE_integer *PX_, JE_integer *PY_, JE_integer *lastTurn_, 
 						
 						if (tempW == pItems[P_FRONT])
 						{
-							*score_ += 1000;
-							if (portPower[1-1] < 11)
+							this_player->cash += 1000;
+							if (player[0].items.weapon[FRONT_WEAPON].power < 11)
 								JE_powerUp(1);
 							JE_calcPurpleBall(playerNum_);
 						}
@@ -4356,7 +4393,7 @@ void JE_playerCollide( JE_integer *PX_, JE_integer *PY_, JE_integer *lastTurn_, 
 						}
 						
 						pItems[P_FRONT] = tempW;
-						*score_ += 200;
+						this_player->cash += 200;
 						soundQueue[7] = S_POWERUP;
 						enemyAvail[z] = 1;
 					}
@@ -4364,7 +4401,7 @@ void JE_playerCollide( JE_integer *PX_, JE_integer *PY_, JE_integer *lastTurn_, 
 					{
 						if (playerNum_ == 1)
 						{
-							*score_ += 250;
+							this_player->cash += 250;
 							pItems[P_SPECIAL] = tempI4 - 32100;
 							shotMultiPos[9-1] = 0;
 							shotRepeat[9-1] = 10;
@@ -4426,11 +4463,11 @@ void JE_playerCollide( JE_integer *PX_, JE_integer *PY_, JE_integer *lastTurn_, 
 							soundQueue[7] = S_POWERUP;
 						}
 						if (enemyAvail[z] == 1)
-							*score_ += 250;
+							this_player->cash += 250;
 					}
 					else if (tempI4 > 31000)
 					{
-						*score_ += 250;
+						this_player->cash += 250;
 						if (playerNum_ == 2)
 						{
 							if (isNetworkGame)
@@ -4451,8 +4488,9 @@ void JE_playerCollide( JE_integer *PX_, JE_integer *PY_, JE_integer *lastTurn_, 
 							shotMultiPos[2] = 0;
 							enemyAvail[z] = 1;
 							soundQueue[7] = S_POWERUP;
-							if (portPower[2-1] == 0)
-								portPower[2-1] = 1;
+							
+							if (player[0].items.weapon[REAR_WEAPON].power == 0)  // does this ever happen?
+								player[0].items.weapon[REAR_WEAPON].power = 1;
 						}
 					}
 					else if (tempI4 > 30000)
@@ -4489,7 +4527,7 @@ void JE_playerCollide( JE_integer *PX_, JE_integer *PY_, JE_integer *lastTurn_, 
 								shotMultiPos[11-1] = 0;
 								shotRepeat[11-1] = 0;
 							}
-							*score_ += 250;
+							this_player->cash += 250;
 						}
 						
 					}
@@ -4578,17 +4616,21 @@ void JE_playerCollide( JE_integer *PX_, JE_integer *PY_, JE_integer *lastTurn_, 
 						pItems[P_REAR] = 26;
 						pItemsPlayer2[P_REAR] = 26;
 						memcpy(pItemsBack2, pItems, sizeof(pItemsBack2));
-						portConfig[2-1] = 1;
+						
+						for (uint i = 0; i < COUNTOF(player); ++i)
+							player[i].weapon_mode = 1;
+						
 						memset(shotMultiPos, 0, sizeof(shotMultiPos));
 					}
 					else if (twoPlayerLinked)
 					{
-						score += tempI4 / 2;
-						score2 += tempI4 / 2;
+						// players get equal share of pick-up cash when linked
+						for (uint i = 0; i < COUNTOF(player); ++i)
+							player[i].cash += tempI4 / COUNTOF(player);
 					}
 					else
 					{
-						*score_ += tempI4;
+						this_player->cash += tempI4;
 					}
 					JE_setupExplosion(tempI3, enemy[z].ey, 0, enemyDat[enemy[z].enemytype].explosiontype, true, false);
 				}

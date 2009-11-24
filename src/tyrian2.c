@@ -730,6 +730,8 @@ start_level:
 	if (play_demo)
 		return;
 	
+	int old_weapon_bar[2] = { 0, 0 };  // only redrawn when they change
+	
 start_level_first:
 
 	set_volume(tyrMusicVolume, fxVolume);
@@ -931,11 +933,6 @@ start_level_first:
 	/* Set cubes to 0 */
 	cubeMax = 0;
 
-	lastPortPower[0] = 0;
-	lastPortPower[1] = 0;
-	lastPortPower[2] = 0;
-	lastPortPower[3] = 0;
-
 	/* Secret Level Display */
 	flash = 0;
 	flashChange = 1;
@@ -986,7 +983,13 @@ start_level_first:
 		efwrite(levelName,   1, 10, demo_file);
 		efwrite(&lvlFileNum, 1,  1, demo_file);
 		efwrite(pItems,      1, 12, demo_file);
-		efwrite(portPower,   1,  5, demo_file);
+		
+		for (uint i = 0; i < 2; ++i)
+			fputc(player[0].items.weapon[i].power, demo_file);
+		
+		for (uint i = 0; i < 3; ++i)
+			fputc(0, demo_file);
+		
 		efwrite(&levelSong,  1,  1, demo_file);
 
 		demo_keys = 0;
@@ -1119,8 +1122,8 @@ level_loop:
 
 	allPlayersGone = !playerAlive &&
 	                 (!playerAliveB || !twoPlayerMode) &&
-	                 ((portPower[0] == 1 && playerStillExploding == 0) || (!onePlayerAction && !twoPlayerMode)) &&
-	                 ((portPower[1] == 1 && playerStillExploding2 == 0) || !twoPlayerMode);
+	                 ((*player[0].lives == 1 && playerStillExploding == 0) || (!onePlayerAction && !twoPlayerMode)) &&
+	                 ((*player[1].lives == 1 && playerStillExploding2 == 0) || !twoPlayerMode);
 
 
 	/*-----MUSIC FADE------*/
@@ -1161,19 +1164,20 @@ level_loop:
 		{
 			shield = 0;
 			shield2 = 0;
-
-			if (portPower[2-1] == 0 || armorLevel2 == 0)
+			
+			// spawned dragonwing died :(
+			if (*player[1].lives == 0 || armorLevel2 == 0)
 				twoPlayerMode = false;
 
-			if (score >= galagaLife)
+			if (player[0].cash >= galagaLife)
 			{
 				soundQueue[6] = S_EXPLOSION_11;
 				soundQueue[7] = S_SOUL_OF_ZINGLON;
 
-				if (portPower[1-1] < 11)
-					portPower[1-1]++;
+				if (*player[0].lives < 11)
+					++(*player[0].lives);
 				else
-					score += 1000;
+					player[0].cash += 1000;
 
 				if (galagaLife == 10000)
 					galagaLife = 20000;
@@ -1214,51 +1218,24 @@ level_loop:
 		}
 
 		/*---------------------Weapon Display-------------------------*/
-		if (lastPortPower[1-1] != portPower[1-1])
+		for (uint i = 0; i < 2; ++i)
 		{
-			lastPortPower[1-1] = portPower[1-1];
-
-			if (twoPlayerMode)
+			uint item_power = player[twoPlayerMode ? i : 0].items.weapon[i].power;
+			
+			if (old_weapon_bar[i] != item_power)
 			{
-				tempW2 = 6;
-				tempW = 286;
-			}
-			else
-			{
-				tempW2 = 17;
-				tempW = 289;
-			}
-
-			JE_c_bar(tempW, tempW2, tempW + 1 + 10 * 2, tempW2 + 2, 0);
-
-			for (temp = 1; temp <= portPower[1-1]; temp++)
-			{
-				JE_rectangle(tempW, tempW2, tempW + 1, tempW2 + 2, 115 + temp); /* <MXD> SEGa000 */
-				tempW += 2;
-			}
-		}
-
-		if (lastPortPower[2-1] != portPower[2-1])
-		{
-			lastPortPower[2-1] = portPower[2-1];
-
-			if (twoPlayerMode)
-			{
-				tempW2 = 100;
-				tempW = 286;
-			}
-			else
-			{
-				tempW2 = 38;
-				tempW = 289;
-			}
-
-			JE_c_bar(tempW, tempW2, tempW + 1 + 10 * 2, tempW2 + 2, 0);
-
-			for (temp = 1; temp <= portPower[2-1]; temp++)
-			{
-				JE_rectangle(tempW, tempW2, tempW + 1, tempW2 + 2, 115 + temp); /* <MXD> SEGa000 */
-				tempW += 2;
+				old_weapon_bar[i] = item_power;
+				
+				int x = twoPlayerMode ? 286 : 289,
+				    y = (i == 0) ? (twoPlayerMode ? 6 : 17) : (twoPlayerMode ? 100 : 38);
+				
+				JE_c_bar(x, y, x + 1 + 10 * 2, y + 2, 0);
+				
+				for (int j = 1; j <= item_power; ++j)
+				{
+					JE_rectangle(x, y, x + 1, y + 2, 115 + j); /* SEGa000 */
+					x += 2;
+				}
 			}
 		}
 
@@ -1874,10 +1851,8 @@ level_loop:
 											}
 											else
 											{
-												if ((playerNum < 2) || galagaMode)
-													score += enemy[temp2].evalue;
-												else
-													score2 += enemy[temp2].evalue;
+												// in galaga mode player 2 is sidekick, so give cash to player 1
+												player[galagaMode ? 0 : playerNum - 1].cash += enemy[temp2].evalue;
 											}
 										}
 
@@ -1947,10 +1922,10 @@ draw_player_shot_loop_end:
 	/*=================================*/
 
 	if (playerAlive && !endLevel)
-		JE_playerCollide(&PX, &PY, &lastTurn, &lastTurn2, &score, &armorLevel, &shield, &playerAlive, &playerStillExploding, 1, playerInvulnerable1);
+		JE_playerCollide(&player[0], &PX, &PY, &lastTurn, &lastTurn2, &armorLevel, &shield, &playerAlive, &playerStillExploding, 1, playerInvulnerable1);
 
 	if (twoPlayerMode && playerAliveB && !endLevel)
-		JE_playerCollide(&PXB, &PYB, &lastTurnB, &lastTurn2B, &score2, &armorLevel2, &shield2, &playerAliveB, &playerStillExploding2, 2, playerInvulnerable2);
+		JE_playerCollide(&player[1], &PXB, &PYB, &lastTurnB, &lastTurn2B, &armorLevel2, &shield2, &playerAliveB, &playerStillExploding2, 2, playerInvulnerable2);
 
 	if (firstGameOver)
 		JE_mainGamePlayerFunctions();      /*--------PLAYER DRAW+MOVEMENT---------*/
@@ -2728,7 +2703,7 @@ new_game:
 						superTyrian = true;
 						twoPlayerMode = false;
 						
-						score = 0;
+						player[0].cash = 0;
 						
 						pItems[P_SHIP] = 13;           // The Stalker 21.126
 						pItems[P_FRONT] = 39;          // Atomic RailGun
@@ -2741,8 +2716,8 @@ new_game:
 						pItems[P2_SIDEKICK_MODE] = 2;  // not sure
 						pItems[P2_SIDEKICK_TYPE] = 1;  // not sure
 						
-						portPower[0] = 3;
-						portPower[1] = 0;
+						player[0].items.weapon[FRONT_WEAPON].power = 3;
+						player[0].items.weapon[REAR_WEAPON].power = 1;
 						break;
 						
 					case 'J':  // section jump
@@ -2850,14 +2825,14 @@ new_game:
 						
 						if (twoPlayerMode)
 						{
-							sprintf(levelWarningText[0], "%s %d", miscText[40], score);
-							sprintf(levelWarningText[1], "%s %d", miscText[41], score2);
+							for (uint i = 0; i < 2; ++i)
+								snprintf(levelWarningText[i], sizeof(*levelWarningText), "%s %lu", miscText[40], player[i].cash);
 							strcpy(levelWarningText[2], "");
 							levelWarningLines = 3;
 						}
 						else
 						{
-							sprintf(levelWarningText[0], "%s %d", miscText[37], JE_totalScore(score, pItems));
+							sprintf(levelWarningText[0], "%s %d", miscText[37], JE_totalScore(player[0].cash, pItems));
 							strcpy(levelWarningText[1], "");
 							levelWarningLines = 2;
 						}
@@ -3477,9 +3452,9 @@ bool JE_titleScreen( JE_boolean animate )
 			network_update();
 		}
 
-		score = 0;
-		score2 = 0;
-
+		for (uint i = 0; i < COUNTOF(player); ++i)
+			player[i].cash = 0;
+		
 		pItems[P_SHIP] = 11;
 
 		while (!network_is_sync())
@@ -3657,7 +3632,8 @@ bool JE_titleScreen( JE_boolean animate )
 						onePlayerAction = true;
 						gameLoaded = true;
 						difficultyLevel = initialDifficulty;
-						score = 0;
+						
+						player[0].cash = 0;
 
 						pItems[P_SHIP] = 13;           // The Stalker 21.126
 						pItems[P_FRONT] = 39;          // Atomic RailGun
@@ -3689,7 +3665,8 @@ bool JE_titleScreen( JE_boolean animate )
 							superArcadeMode = i+1;
 							gameLoaded = true;
 							initialDifficulty = ++difficultyLevel;
-							score = 0;
+							
+							player[0].cash = 0;
 
 							pItems[P_FRONT] = SAWeapon[i][0];
 							pItems[P_SPECIAL] = SASpecialWeapon[i];
@@ -3734,13 +3711,15 @@ bool JE_titleScreen( JE_boolean animate )
 							
 							if (onePlayerAction)
 							{
-								score = 0;
+								player[0].cash = 0;
+								
 								pItems[P_SHIP] = 8;
 							}
 							else if (twoPlayerMode)
 							{
-								score = 0;
-								score2 = 0;
+								for (uint i = 0; i < COUNTOF(player); ++i)
+									player[i].cash = 0;
+								
 								pItems[P_SHIP] = 11;
 								difficultyLevel++;
 								inputDevice[0] = 1;
@@ -3748,25 +3727,14 @@ bool JE_titleScreen( JE_boolean animate )
 							}
 							else if (richMode)
 							{
-								score = 1000000;
+								player[0].cash = 1000000;
 							}
 							else
 							{
-								switch (episodeNum)
-								{
-								case 1:
-									score = 10000;
-									break;
-								case 2:
-									score = 15000;
-									break;
-								case 3:
-									score = 20000;
-									break;
-								case 4:
-									score = 30000;
-									break;
-								}
+								ulong initial_cash[] = { 10000, 15000, 20000, 30000 };
+								
+								assert(episodeNum >= 1 && episodeNum <= 4);
+								player[0].cash = initial_cash[episodeNum-1];
 							}
 						}
 						fadeIn = true;
@@ -4796,12 +4764,13 @@ void JE_eventSystem( void )
 				if (eventRec[eventLoc-1].eventdat == 534)
 					eventRec[eventLoc-1].eventdat = 827;
 			}
-			else
+			else if (!superTyrian)
 			{
-				if (eventRec[eventLoc-1].eventdat == 533
-				    && (portPower[1-1] == 11 || (mt_rand() % 15) < portPower[1-1])
-				    && !superTyrian)
+				const uint lives = *player[0].lives;
+				
+				if (eventRec[eventLoc-1].eventdat == 533 && (lives == 11 || (mt_rand() % 15) < lives))
 				{
+					// enemy will drop random special weapon
 					eventRec[eventLoc-1].eventdat = 829 + (mt_rand() % 6);
 				}
 			}
@@ -4896,11 +4865,12 @@ void JE_eventSystem( void )
 		filterFadeStart    = (eventRec[eventLoc-1].eventdat6 == 0);
 		break;
 		
-	case 45: /* Two Player Enemy from other Enemies */
+	case 45: /* arcade-only enemy from other enemies */
 		if (!superTyrian)
 		{
-			if (eventRec[eventLoc-1].eventdat == 533
-			    && (portPower[1-1] == 11 || (mt_rand() % 15) < portPower[1-1]))
+			const uint lives = *player[0].lives;
+			
+			if (eventRec[eventLoc-1].eventdat == 533 && (lives == 11 || (mt_rand() % 15) < lives))
 			{
 				eventRec[eventLoc-1].eventdat = 829 + (mt_rand() % 6);
 			}

@@ -88,8 +88,6 @@ typedef struct
 typedef JE_SaveFileType JE_SaveFilesType[SAVE_FILES_NUM]; /* [1..savefilesnum] */
 typedef JE_byte JE_SaveGameTemp[SAVE_FILES_SIZE + 4 + 100]; /* [1..sizeof(savefilestype) + 4 + 100] */
 
-typedef JE_byte JE_PortPowerType[7]; /* [1..7] */
-
 typedef struct
 {
 	JE_byte sC;
@@ -110,7 +108,6 @@ extern JE_word lastCubeMax, cubeMax;
 extern JE_word cubeList[4];
 extern JE_boolean gameHasRepeated;
 extern JE_shortint difficultyLevel, oldDifficultyLevel, initialDifficulty;
-extern JE_longint score, score2;
 extern JE_integer power, lastPower, powerAdd;
 extern JE_PItemsType pItems, pItemsPlayer2, pItemsBack, pItemsBack2;
 extern JE_shortint shield, shieldMax;
@@ -119,9 +116,7 @@ extern JE_shortint shield2, shieldMax2;
 extern JE_integer armorLevel, armorLevel2;
 extern JE_byte shieldWait, shieldT;
 extern JE_byte shotRepeat[11], shotMultiPos[11];
-extern JE_byte portConfig[10];
 extern JE_boolean portConfigChange, portConfigDone;
-extern JE_PortPowerType portPower, lastPortPower;
 extern JE_boolean resetVersion;
 extern char lastLevelName[11], levelName[11];
 extern JE_byte mainLevel, nextLevel, saveLevel;
