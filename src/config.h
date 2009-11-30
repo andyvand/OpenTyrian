@@ -40,22 +40,6 @@
 typedef SDLKey JE_KeySettingType[8]; /* [1..8] */
 typedef JE_byte JE_PItemsType[12]; /* [1..12] */
 
-enum
-{
-	P_FRONT = 0,
-	P_REAR,
-	P_SUPERARCADE,
-	P_LEFT_SIDEKICK,
-	P_RIGHT_SIDEKICK,
-	P_GENERATOR,
-	P2_SIDEKICK_MODE,
-	P2_SIDEKICK_TYPE,
-	P_EPISODE,
-	P_SHIELD,
-	P_SPECIAL,
-	P_SHIP,
-};
-
 typedef JE_byte JE_EditorItemAvailType[100]; /* [1..100] */
 
 typedef struct
@@ -88,8 +72,6 @@ typedef struct
 typedef JE_SaveFileType JE_SaveFilesType[SAVE_FILES_NUM]; /* [1..savefilesnum] */
 typedef JE_byte JE_SaveGameTemp[SAVE_FILES_SIZE + 4 + 100]; /* [1..sizeof(savefilestype) + 4 + 100] */
 
-typedef JE_byte JE_PortPowerType[7]; /* [1..7] */
-
 typedef struct
 {
 	JE_byte sC;
@@ -110,18 +92,10 @@ extern JE_word lastCubeMax, cubeMax;
 extern JE_word cubeList[4];
 extern JE_boolean gameHasRepeated;
 extern JE_shortint difficultyLevel, oldDifficultyLevel, initialDifficulty;
-extern JE_longint score, score2;
 extern JE_integer power, lastPower, powerAdd;
-extern JE_PItemsType pItems, pItemsPlayer2, pItemsBack, pItemsBack2;
-extern JE_shortint shield, shieldMax;
-extern const JE_shortint shieldSet;
-extern JE_shortint shield2, shieldMax2;
-extern JE_integer armorLevel, armorLevel2;
 extern JE_byte shieldWait, shieldT;
 extern JE_byte shotRepeat[11], shotMultiPos[11];
-extern JE_byte portConfig[10];
 extern JE_boolean portConfigChange, portConfigDone;
-extern JE_PortPowerType portPower, lastPortPower;
 extern char lastLevelName[11], levelName[11];
 extern JE_byte mainLevel, nextLevel, saveLevel;
 extern JE_KeySettingType keySettings;
@@ -139,7 +113,7 @@ extern JE_byte secretHint;
 extern JE_byte background3over;
 extern JE_byte background2over;
 extern JE_byte gammaCorrection;
-extern JE_boolean superPause, explosionTransparent, youAreCheating, displayScore, soundHasChanged, background2, smoothScroll, wild, superWild, starActive, topEnemyOver, skyEnemyOverAll, background2notTransparent;
+extern JE_boolean superPause, explosionTransparent, youAreCheating, displayScore, background2, smoothScroll, wild, superWild, starActive, topEnemyOver, skyEnemyOverAll, background2notTransparent;
 extern JE_byte versionNum;
 extern JE_byte fastPlay;
 extern JE_boolean pentiumMode;

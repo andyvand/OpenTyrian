@@ -24,6 +24,7 @@
 #include "mtrand.h"
 #include "nortsong.h"
 #include "opentyr.h"
+#include "player.h"
 #include "varz.h"
 #include "vga256d.h"
 #include "video.h"
@@ -150,26 +151,18 @@ JE_word lastCubeMax, cubeMax;
 JE_word cubeList[4]; /* [1..4] */
 
 /* High-Score Stuff */
-JE_boolean gameHasRepeated;
+JE_boolean gameHasRepeated;  // can only get highscore on first play-through
 
 /* Difficulty */
-JE_shortint difficultyLevel, oldDifficultyLevel, initialDifficulty;
+JE_shortint difficultyLevel, oldDifficultyLevel,
+            initialDifficulty;  // can only get highscore on initial episode
 
 /* Player Stuff */
-JE_longint score, score2;
-
 JE_integer    power, lastPower, powerAdd;
-JE_PItemsType pItems, pItemsPlayer2, pItemsBack, pItemsBack2;
-JE_shortint   shield, shieldMax;
-const JE_shortint shieldSet = 5;
-JE_shortint   shield2, shieldMax2;
-JE_integer    armorLevel, armorLevel2;
 JE_byte       shieldWait, shieldT;
 
 JE_byte          shotRepeat[11], shotMultiPos[11]; /* [1..11] */  /* 7,8 = Superbomb */
-JE_byte          portConfig[10]; /* [1..10] */
 JE_boolean       portConfigChange, portConfigDone;
-JE_PortPowerType portPower, lastPortPower;
 
 /* Level Data */
 char    lastLevelName[11], levelName[11]; /* string [10] */
@@ -205,7 +198,6 @@ JE_boolean superPause = false;
 JE_boolean explosionTransparent,
            youAreCheating,
            displayScore,
-           soundHasChanged,
            background2, smoothScroll, wild, superWild, starActive,
            topEnemyOver,
            skyEnemyOverAll,
@@ -276,6 +268,38 @@ void JE_setupStars( void )
 	}
 }
 
+static void playeritems_to_pitems( JE_PItemsType pItems, PlayerItems *items, JE_byte initial_episode_num )
+{
+	pItems[0]  = items->weapon[FRONT_WEAPON].id;
+	pItems[1]  = items->weapon[REAR_WEAPON].id;
+	pItems[2]  = items->super_arcade_mode;
+	pItems[3]  = items->sidekick[LEFT_SIDEKICK];
+	pItems[4]  = items->sidekick[RIGHT_SIDEKICK];
+	pItems[5]  = items->generator;
+	pItems[6]  = items->sidekick_level;
+	pItems[7]  = items->sidekick_series;
+	pItems[8]  = initial_episode_num;
+	pItems[9]  = items->shield;
+	pItems[10] = items->special;
+	pItems[11] = items->ship;
+}
+
+static void pitems_to_playeritems( PlayerItems *items, JE_PItemsType pItems, JE_byte *initial_episode_num )
+{
+	items->weapon[FRONT_WEAPON].id  = pItems[0];
+	items->weapon[REAR_WEAPON].id   = pItems[1];
+	items->super_arcade_mode        = pItems[2];
+	items->sidekick[LEFT_SIDEKICK]  = pItems[3];
+	items->sidekick[RIGHT_SIDEKICK] = pItems[4];
+	items->generator                = pItems[5];
+	items->sidekick_level           = pItems[6];
+	items->sidekick_series          = pItems[7];
+	if (initial_episode_num != NULL)
+		*initial_episode_num        = pItems[8];
+	items->shield                   = pItems[9];
+	items->special                  = pItems[10];
+	items->ship                     = pItems[11];
+}
 void JE_saveGame( JE_byte slot, const char *name )
 {
 	saveFiles[slot-1].initialDifficulty = initialDifficulty;
@@ -283,21 +307,22 @@ void JE_saveGame( JE_byte slot, const char *name )
 	saveFiles[slot-1].level = saveLevel;
 	
 	if (superTyrian)
-		pItems[P_SUPERARCADE] = SA_SUPERTYRIAN;
+		player[0].items.super_arcade_mode = SA_SUPERTYRIAN;
 	else if (superArcadeMode == SA_NONE && onePlayerAction)
-		pItems[P_SUPERARCADE] = SA_ARCADE;
+		player[0].items.super_arcade_mode = SA_ARCADE;
 	else
-		pItems[P_SUPERARCADE] = superArcadeMode;
+		player[0].items.super_arcade_mode = superArcadeMode;
 	
-	memcpy(&saveFiles[slot-1].items, &pItems, sizeof(pItems));
+	playeritems_to_pitems(saveFiles[slot-1].items, &player[0].items, initial_episode_num);
 	
 	if (twoPlayerMode)
-		memcpy(&saveFiles[slot-1].lastItems, &pItemsPlayer2, sizeof(pItemsPlayer2));
+		playeritems_to_pitems(saveFiles[slot-1].lastItems, &player[1].items, 0);
 	else
-		memcpy(&saveFiles[slot-1].lastItems, &pItemsBack2, sizeof(pItemsBack2));
+		playeritems_to_pitems(saveFiles[slot-1].lastItems, &player[0].last_items, 0);
 	
-	saveFiles[slot-1].score  = score;
-	saveFiles[slot-1].score2 = score2;
+	saveFiles[slot-1].score  = player[0].cash;
+	saveFiles[slot-1].score2 = player[1].cash;
+	
 	memcpy(&saveFiles[slot-1].levelName, &lastLevelName, sizeof(lastLevelName));
 	saveFiles[slot-1].cubes  = lastCubeMax;
 
@@ -321,12 +346,13 @@ void JE_saveGame( JE_byte slot, const char *name )
 	saveFiles[slot-1].input2 = inputDevice[1];
 
 	strcpy(saveFiles[slot-1].name, name);
-
-	for (x = 0; x < 2; x++)
+	
+	for (uint port = 0; port < 2; ++port)
 	{
-		saveFiles[slot-1].power[x] = portPower[x];
+		// if two-player, use first player's front and second player's rear weapon
+		saveFiles[slot-1].power[port] = player[twoPlayerMode ? port : 0].items.weapon[port].power;
 	}
-
+	
 	JE_saveConfiguration();
 }
 
@@ -344,9 +370,10 @@ void JE_loadGame( JE_byte slot )
 	gameHasRepeated   = saveFiles[slot-1].gameHasRepeated;
 	twoPlayerMode     = (slot-1) > 10;
 	difficultyLevel   = saveFiles[slot-1].difficulty;
-	memcpy(&pItems, &saveFiles[slot-1].items, sizeof(pItems));
 	
-	superArcadeMode = pItems[P_SUPERARCADE];
+	pitems_to_playeritems(&player[0].items, saveFiles[slot-1].items, &initial_episode_num);
+	
+	superArcadeMode = player[0].items.super_arcade_mode;
 	
 	if (superArcadeMode == SA_SUPERTYRIAN)
 		superTyrian = true;
@@ -357,23 +384,25 @@ void JE_loadGame( JE_byte slot )
 	
 	if (twoPlayerMode)
 	{
-		memcpy(&pItemsPlayer2, &saveFiles[slot-1].lastItems, sizeof(pItemsPlayer2));
 		onePlayerAction = false;
+		
+		pitems_to_playeritems(&player[1].items, saveFiles[slot-1].lastItems, NULL);
 	}
 	else
 	{
-		memcpy(&pItemsBack2, &saveFiles[slot-1].lastItems, sizeof(pItemsBack2));
+		pitems_to_playeritems(&player[0].last_items, saveFiles[slot-1].lastItems, NULL);
 	}
 
 	/* Compatibility with old version */
-	if (pItemsPlayer2[P2_SIDEKICK_MODE] < 101)
+	if (player[1].items.sidekick_level < 101)
 	{
-		pItemsPlayer2[P2_SIDEKICK_MODE] = 101;
-		pItemsPlayer2[P2_SIDEKICK_TYPE] = pItemsPlayer2[P_LEFT_SIDEKICK];
+		player[1].items.sidekick_level = 101;
+		player[1].items.sidekick_series = player[1].items.sidekick[LEFT_SIDEKICK];
 	}
-
-	score       = saveFiles[slot-1].score;
-	score2      = saveFiles[slot-1].score2;
+	
+	player[0].cash = saveFiles[slot-1].score;
+	player[1].cash = saveFiles[slot-1].score2;
+	
 	mainLevel   = saveFiles[slot-1].level;
 	cubeMax     = saveFiles[slot-1].cubes;
 	lastCubeMax = cubeMax;
@@ -382,11 +411,12 @@ void JE_loadGame( JE_byte slot )
 	inputDevice[0] = saveFiles[slot-1].input1;
 	inputDevice[1] = saveFiles[slot-1].input2;
 
-	for (temp = 0; temp < 2; temp++)
+	for (uint port = 0; port < 2; ++port)
 	{
-		portPower[temp] = saveFiles[slot-1].power[temp];
+		// if two-player, use first player's front and second player's rear weapon
+		player[twoPlayerMode ? port : 0].items.weapon[port].power = saveFiles[slot-1].power[port];
 	}
-
+	
 	temp5 = saveFiles[slot-1].episode;
 
 	memcpy(&levelName, &saveFiles[slot-1].levelName, sizeof(levelName));
