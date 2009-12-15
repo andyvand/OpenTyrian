@@ -294,13 +294,6 @@ JE_boolean allPlayersGone; /*Both players dead and finished exploding*/
 JE_byte shotAvail[MAX_PWEAPON]; /* [1..MaxPWeapon] */   /*0:Avail 1-255:Duration left*/
 const uint shadowYDist = 10;
 
-JE_word option1Draw, option2Draw, option1Item, option2Item;
-JE_byte option1AmmoMax, option2AmmoMax;
-JE_word option1AmmoRechargeWait, option2AmmoRechargeWait,
-        option1AmmoRechargeWaitMax, option2AmmoRechargeWaitMax;
-JE_integer option1Ammo, option2Ammo;
-JE_integer optionAni1, optionAni2, optionCharge1, optionCharge2, optionCharge1Wait, optionCharge2Wait;
-JE_boolean optionAni1Go, optionAni2Go, option1Stop, option2Stop;
 JE_real optionSatelliteRotate;
 
 JE_integer optionAttachmentMove;
@@ -424,75 +417,36 @@ void JE_drawOptions( void )
 	
 	Player *this_player = &player[twoPlayerMode ? 1 : 0];
 	
-	option1Item = this_player->items.sidekick[LEFT_SIDEKICK];
-	option2Item = this_player->items.sidekick[RIGHT_SIDEKICK];
-	
-	if (twoPlayerMode)
+	for (uint i = 0; i < COUNTOF(this_player->sidekick); ++i)
 	{
-		option1Draw = (option1Item != 0) ? 108 : 0;
-		option2Draw = (option2Item != 0) ? 126 : 0;
-	}
-	else
-	{
-		option1Draw = (option1Item != 0) ? 64 : 0;
-		option2Draw = (option2Item != 0) ? 82 : 0;
+		JE_OptionType *this_option = &options[this_player->items.sidekick[i]];
+		
+		this_player->sidekick[i].ammo = 
+		this_player->sidekick[i].ammo_max = this_option->ammo;
+		
+		this_player->sidekick[i].ammo_refill_ticks =
+		this_player->sidekick[i].ammo_refill_ticks_max = (105 - this_player->sidekick[i].ammo) * 4;
+		
+		this_player->sidekick[i].style = this_option->tr;
+		
+		this_player->sidekick[i].animation_enabled = (this_option->option == 1);
+		this_player->sidekick[i].animation_frame = 0;
+		
+		this_player->sidekick[i].charge = 0;
+		this_player->sidekick[i].charge_ticks = 20;
+		
+		
+		// draw initial sidekick HUD
+		const int y = hud_sidekick_y[twoPlayerMode ? 1 : 0][i];
+		
+		fill_rectangle_xy(VGAScreenSeg, 284, y, 284 + 28, y + 15, 0);
+		if (this_option->icongr > 0)
+			blit_sprite(VGAScreenSeg, 284, y, OPTION_SHAPES, this_option->icongr - 1);  // sidekick HUD icon
+		draw_segmented_gauge(VGAScreenSeg, 284, y + 13, 112, 2, 2, MAX(1, this_player->sidekick[i].ammo_max / 10), this_player->sidekick[i].ammo);
 	}
 	
-	option1Ammo = options[option1Item].ammo;
-	option2Ammo = options[option2Item].ammo;
-	
-	optionAni1Go = options[option1Item].option == 1;
-	optionAni2Go = options[option2Item].option == 1;
-	option1Stop  = options[option1Item].stop;
-	option2Stop  = options[option2Item].stop;
-
-	if (option1Ammo > 0)
-		option1AmmoMax = option1Ammo / 10;
-	else
-		option1AmmoMax = 2;
-	if (option1AmmoMax == 0)
-		option1AmmoMax++;
-	option1AmmoRechargeWaitMax = (105 - option1Ammo) * 4;
-	option1AmmoRechargeWait = option1AmmoRechargeWaitMax;
-
-	if (option2Ammo > 0)
-		option2AmmoMax = option2Ammo / 10;
-	else
-		option2AmmoMax = 2;
-	if (option2AmmoMax == 0)
-		option2AmmoMax++;
-	option2AmmoRechargeWaitMax = (105 - option2Ammo) * 4;
-	option2AmmoRechargeWait = option2AmmoRechargeWaitMax;
-
-	if (option1Draw > 0)
-		filled_rectangle(VGAScreenSeg, 284, option1Draw, 284 + 28, option1Draw + 15, 0);
-	if (option2Draw > 0)
-		filled_rectangle(VGAScreenSeg, 284, option2Draw, 284 + 28, option2Draw + 15, 0);
-
-	if (options[option1Item].icongr > 0)
-		blit_sprite(VGAScreenSeg, 284, option1Draw, OPTION_SHAPES, options[option1Item].icongr - 1);  // left sidekick HUD icon
-	if (options[option2Item].icongr > 0)
-		blit_sprite(VGAScreenSeg, 284, option2Draw, OPTION_SHAPES, options[option2Item].icongr - 1);  // right sidekick HUD icon
-
-	if (option1Draw > 0)
-		JE_barDrawDirect(284, option1Draw + 13, option1AmmoMax, 112, option1Ammo, 2, 2);
-	if (option2Draw > 0)
-		JE_barDrawDirect(284, option2Draw + 13, option2AmmoMax, 112, option2Ammo, 2, 2);
-
-	if (option1Ammo == 0)
-		option1Ammo = -1;
-	if (option2Ammo == 0)
-		option2Ammo = -1;
-
-	optionAni1 = 1;
-	optionAni2 = 1;
-	optionCharge1Wait = 20;
-	optionCharge2Wait = 20;
-	optionCharge1 = 0;
-	optionCharge2 = 0;
-
 	VGAScreen = temp_surface;
-
+	
 	JE_drawOptionLevel();
 }
 
@@ -502,7 +456,7 @@ void JE_drawOptionLevel( void )
 	{
 		for (temp = 1; temp <= 3; temp++)
 		{
-			filled_rectangle(VGAScreenSeg, 268, 127 + (temp - 1) * 6, 269, 127 + 3 + (temp - 1) * 6, 193 + ((player[1].items.sidekick_level - 100) == temp) * 11);
+			fill_rectangle_xy(VGAScreenSeg, 268, 127 + (temp - 1) * 6, 269, 127 + 3 + (temp - 1) * 6, 193 + ((player[1].items.sidekick_level - 100) == temp) * 11);
 		}
 	}
 }
@@ -923,9 +877,10 @@ void JE_specialComplete( JE_byte playerNum, JE_byte specialType )
 			
 			soundQueue[3] = S_POWERUP;
 			break;
-		case 17:
+			
+		case 17:  // spawn left or right sidekick
 			soundQueue[3] = S_POWERUP;
-
+			
 			if (player[0].items.sidekick[LEFT_SIDEKICK] == special[specialType].wpn)
 			{
 				player[0].items.sidekick[RIGHT_SIDEKICK] = special[specialType].wpn;
@@ -940,9 +895,10 @@ void JE_specialComplete( JE_byte playerNum, JE_byte specialType )
 			tempScreenSeg = VGAScreenSeg;
 			JE_drawOptions();
 			break;
-		case 18:
+			
+		case 18:  // spawn right sidekick
 			player[0].items.sidekick[RIGHT_SIDEKICK] = special[specialType].wpn;
-
+			
 			tempScreenSeg = VGAScreenSeg;
 			JE_drawOptions();
 
@@ -1285,21 +1241,21 @@ void JE_wipeShieldArmorBars( void )
 {
 	if (!twoPlayerMode || galagaMode)
 	{
-		filled_rectangle(VGAScreenSeg, 270, 137, 278, 194 - player[0].shield * 2, 0);
+		fill_rectangle_xy(VGAScreenSeg, 270, 137, 278, 194 - player[0].shield * 2, 0);
 	}
 	else
 	{
-		filled_rectangle(VGAScreenSeg, 270, 60 - 44, 278, 60, 0);
-		filled_rectangle(VGAScreenSeg, 270, 194 - 44, 278, 194, 0);
+		fill_rectangle_xy(VGAScreenSeg, 270, 60 - 44, 278, 60, 0);
+		fill_rectangle_xy(VGAScreenSeg, 270, 194 - 44, 278, 194, 0);
 	}
 	if (!twoPlayerMode || galagaMode)
 	{
-		filled_rectangle(VGAScreenSeg, 307, 137, 315, 194 - player[0].armor * 2, 0);
+		fill_rectangle_xy(VGAScreenSeg, 307, 137, 315, 194 - player[0].armor * 2, 0);
 	}
 	else
 	{
-		filled_rectangle(VGAScreenSeg, 307, 60 - 44, 315, 60, 0);
-		filled_rectangle(VGAScreenSeg, 307, 194 - 44, 315, 194, 0);
+		fill_rectangle_xy(VGAScreenSeg, 307, 60 - 44, 315, 60, 0);
+		fill_rectangle_xy(VGAScreenSeg, 307, 194 - 44, 315, 194, 0);
 	}
 }
 

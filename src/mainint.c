@@ -1372,7 +1372,7 @@ void JE_inGameHelp( void )
 	JE_barShade(3, 3, 260, 180);
 	JE_barShade(5, 5, 258, 178);
 	JE_barShade(7, 7, 256, 176);
-	filled_rectangle(VGAScreen, 9, 9, 254, 174, 0);
+	fill_rectangle_xy(VGAScreen, 9, 9, 254, 174, 0);
 	
 	if (twoPlayerMode)  // Two-Player Help
 	{
@@ -1557,7 +1557,7 @@ void JE_highScoreCheck( void )
 						JE_outText(65, 89, tempstr, 8, 3);
 						tempW = 65 + JE_textWidth(tempstr, TINY_FONT);
 						JE_barShade(tempW + 2, 90, tempW + 6, 95);
-						filled_rectangle(VGAScreen, tempW + 1, 89, tempW + 5, 94, flash);
+						fill_rectangle_xy(VGAScreen, tempW + 1, 89, tempW + 5, 94, flash);
 						
 						for (int i = 0; i < 14; i++)
 						{
@@ -2125,8 +2125,8 @@ void JE_playCredits( void )
 			yloc += 20;
 		}
 		
-		filled_rectangle(VGAScreen, 0,  0, 319, 10, 0);
-		filled_rectangle(VGAScreen, 0, 190, 319, 199, 0);
+		fill_rectangle_xy(VGAScreen, 0,  0, 319, 10, 0);
+		fill_rectangle_xy(VGAScreen, 0, 190, 319, 199, 0);
 		
 		if (currentpic == sprite_table[EXTRA_SHAPES].count)
 			JE_outTextAdjust(5, 180, miscText[55-1], 2, -2, SMALL_FONT_SHAPES, false);
@@ -2406,7 +2406,7 @@ void JE_operation( JE_byte slot )
 				JE_outText(65, 89, tempStr, 8, 3);
 				tempW = 65 + JE_textWidth(tempStr, TINY_FONT);
 				JE_barShade(tempW + 2, 90, tempW + 6, 95);
-				filled_rectangle(VGAScreen, tempW + 1, 89, tempW + 5, 94, flash);
+				fill_rectangle_xy(VGAScreen, tempW + 1, 89, tempW + 5, 94, flash);
 				
 				for (int i = 0; i < 14; i++)
 				{
@@ -2947,9 +2947,7 @@ void JE_playerMovement( Player *this_player,
 {
 	JE_integer mouseXC, mouseYC;
 	JE_integer accelXC, accelYC;
-	JE_byte leftOptionIsSpecial = 0;
-	JE_byte rightOptionIsSpecial = 0;
-
+	
 	if (playerNum_ == 2 || !twoPlayerMode)
 	{
 		tempW = weaponPort[this_player->items.weapon[REAR_WEAPON].id].opnum;
@@ -3394,9 +3392,6 @@ redo:
 					twoPlayerLinked = false;
 				}
 			}
-			
-			leftOptionIsSpecial  = options[option1Item].tr;
-			rightOptionIsSpecial = options[option2Item].tr;
 		}
 	}
 	
@@ -3462,10 +3457,13 @@ redo:
 		{
 			if (!twoPlayerMode || shipGr2 != 0)  // if not dragonwing
 			{
-				this_player->sidekick[LEFT_SIDEKICK].x = *mouseX_ - 14;
-				this_player->sidekick[LEFT_SIDEKICK].y = *mouseY_;
+				if (this_player->sidekick[LEFT_SIDEKICK].style == 0)
+				{
+					this_player->sidekick[LEFT_SIDEKICK].x = *mouseX_ - 14;
+					this_player->sidekick[LEFT_SIDEKICK].y = *mouseY_;
+				}
 				
-				if (rightOptionIsSpecial == 0)
+				if (this_player->sidekick[RIGHT_SIDEKICK].style == 0)
 				{
 					this_player->sidekick[RIGHT_SIDEKICK].x = *mouseX_ + 16;
 					this_player->sidekick[RIGHT_SIDEKICK].y = *mouseY_;
@@ -3737,14 +3735,17 @@ redo:
 	/*Options Location*/
 	if (playerNum_ == 2 && shipGr_ == 0)  // if dragonwing
 	{
-		if (rightOptionIsSpecial == 0)
+		if (this_player->sidekick[LEFT_SIDEKICK].style == 0)
+		{
+			this_player->sidekick[LEFT_SIDEKICK].x = this_player->x - 14 + tempI;
+			this_player->sidekick[LEFT_SIDEKICK].y = this_player->y;
+		}
+		
+		if (this_player->sidekick[RIGHT_SIDEKICK].style == 0)
 		{
 			this_player->sidekick[RIGHT_SIDEKICK].x = this_player->x + 17 + tempI;
 			this_player->sidekick[RIGHT_SIDEKICK].y = this_player->y;
 		}
-		
-		this_player->sidekick[LEFT_SIDEKICK].x = this_player->x - 14 + tempI;
-		this_player->sidekick[LEFT_SIDEKICK].y = this_player->y;
 	}
 	
 	if (moveOk)
@@ -3845,7 +3846,7 @@ redo:
 					
 					if (chargeLevel > 0)
 					{
-						filled_rectangle(VGAScreenSeg, 269, 107 + (chargeLevel - 1) * 3, 275, 108 + (chargeLevel - 1) * 3, 193);
+						fill_rectangle_xy(VGAScreenSeg, 269, 107 + (chargeLevel - 1) * 3, 275, 108 + (chargeLevel - 1) * 3, 193);
 					}
 					
 					if (chargeWait > 0)
@@ -3863,7 +3864,7 @@ redo:
 					}
 					
 					if (chargeLevel > 0)
-						filled_rectangle(VGAScreenSeg, 269, 107 + (chargeLevel - 1) * 3, 275, 108 + (chargeLevel - 1) * 3, 204);
+						fill_rectangle_xy(VGAScreenSeg, 269, 107 + (chargeLevel - 1) * 3, 275, 108 + (chargeLevel - 1) * 3, 204);
 					
 					if (shotRepeat[SHOT_P2_CHARGE] > 0)
 					{
@@ -3875,7 +3876,7 @@ redo:
 						JE_initPlayerShot(16, SHOT_P2_CHARGE, this_player->x, this_player->y, *mouseX_, *mouseY_, chargeGunWeapons[player[1].items.weapon[REAR_WEAPON].id-1] + chargeLevel, playerNum_);
 						
 						if (chargeLevel > 0)
-							filled_rectangle(VGAScreenSeg, 269, 107 + (chargeLevel - 1) * 3, 275, 108 + (chargeLevel - 1) * 3, 193);
+							fill_rectangle_xy(VGAScreenSeg, 269, 107 + (chargeLevel - 1) * 3, 275, 108 + (chargeLevel - 1) * 3, 193);
 						
 						chargeLevel = 0;
 						chargeWait = 30 - this_player->items.weapon[REAR_WEAPON].power * 2;
@@ -3901,8 +3902,14 @@ redo:
 					}
 				}
 				
-				/*Special option following*/
-				switch (leftOptionIsSpecial)
+				// sidekicks
+				
+				if (this_player->sidekick[LEFT_SIDEKICK].style == 4 && this_player->sidekick[RIGHT_SIDEKICK].style == 4)
+					optionSatelliteRotate += 0.2f;
+				else if (this_player->sidekick[LEFT_SIDEKICK].style == 4 || this_player->sidekick[RIGHT_SIDEKICK].style == 4)
+					optionSatelliteRotate += 0.15f;
+				
+				switch (this_player->sidekick[LEFT_SIDEKICK].style)
 				{
 				case 1:  // trailing
 				case 3:
@@ -3914,17 +3921,14 @@ redo:
 					this_player->sidekick[LEFT_SIDEKICK].y = MAX(10, this_player->y - 20);
 					break;
 				case 4:  // orbitting
-					optionSatelliteRotate += (rightOptionIsSpecial == 4) ? 0.2f : 0.15f;
 					this_player->sidekick[LEFT_SIDEKICK].x = this_player->x + roundf(sinf(optionSatelliteRotate) * 20);
 					this_player->sidekick[LEFT_SIDEKICK].y = this_player->y + roundf(cosf(optionSatelliteRotate) * 20);
 					break;
 				}
 				
-				switch (rightOptionIsSpecial)
+				switch (this_player->sidekick[RIGHT_SIDEKICK].style)
 				{
 				case 4:  // orbitting
-					if (leftOptionIsSpecial != 4)
-						optionSatelliteRotate += 0.15f;
 					this_player->sidekick[RIGHT_SIDEKICK].x = this_player->x - roundf(sinf(optionSatelliteRotate) * 20);
 					this_player->sidekick[RIGHT_SIDEKICK].y = this_player->y - roundf(cosf(optionSatelliteRotate) * 20);
 					break;
@@ -4010,125 +4014,81 @@ redo:
 					break;
 				}
 				
-				if (playerNum_ == 2 || !twoPlayerMode)
+				if (playerNum_ == 2 || !twoPlayerMode)  // if player has sidekicks
 				{
-					// fire left sidekick
-					if (options[option1Item].wport > 0)
+					for (uint i = 0; i < COUNTOF(player->items.sidekick); ++i)
 					{
-						if (shotRepeat[SHOT_LEFT_SIDEKICK] > 0)
+						uint shot_i = (i == 0) ? SHOT_LEFT_SIDEKICK : SHOT_RIGHT_SIDEKICK;
+						
+						JE_OptionType *this_option = &options[this_player->items.sidekick[i]];
+						
+						// fire/refill sidekick
+						if (this_option->wport > 0)
 						{
-							--shotRepeat[SHOT_LEFT_SIDEKICK];
-						}
-						else
-						{
-							if (option1Ammo >= 0)
+							if (shotRepeat[shot_i] > 0)
 							{
-								if (option1AmmoRechargeWait > 0)
-								{
-									option1AmmoRechargeWait--;
-								}
-								else
-								{
-									option1AmmoRechargeWait = option1AmmoRechargeWaitMax;
-									if (option1Ammo < options[option1Item].ammo)
-										option1Ammo++;
-									JE_barDrawDirect (284, option1Draw + 13, option1AmmoMax, 112, option1Ammo, 2, 2); /*Option1Ammo*/
-								}
+								--shotRepeat[shot_i];
 							}
-							
-							if (option1Ammo > 0)
+							else
 							{
-								if (button[2-1])
+								const int ammo_max = this_player->sidekick[i].ammo_max;
+								
+								if (ammo_max > 0)  // sidekick has limited ammo
 								{
-									JE_initPlayerShot(options[option1Item].wport, SHOT_LEFT_SIDEKICK, this_player->sidekick[LEFT_SIDEKICK].x, this_player->sidekick[LEFT_SIDEKICK].y, *mouseX_, *mouseY_, options[option1Item].wpnum + optionCharge1, playerNum_);
+									if (this_player->sidekick[i].ammo_refill_ticks > 0)
+									{
+										--this_player->sidekick[i].ammo_refill_ticks;
+									}
+									else  // refill one ammo
+									{
+										this_player->sidekick[i].ammo_refill_ticks = this_player->sidekick[i].ammo_refill_ticks_max;
+										
+										if (this_player->sidekick[i].ammo < ammo_max)
+											++this_player->sidekick[i].ammo;
+										
+										// draw sidekick refill ammo gauge
+										const int y = hud_sidekick_y[twoPlayerMode ? 1 : 0][i] + 13;
+										draw_segmented_gauge(VGAScreenSeg, 284, y, 112, 2, 2, MAX(1, ammo_max / 10), this_player->sidekick[i].ammo);
+									}
 									
-									if (optionCharge1 > 0)
-										shotMultiPos[SHOT_LEFT_SIDEKICK] = 0;
-									optionAni1Go = true;
-									optionCharge1Wait = 20;
-									optionCharge1 = 0;
-									option1Ammo--;
-									filled_rectangle(VGAScreenSeg, 284, option1Draw + 13, 312, option1Draw + 15, 0);
-									JE_barDrawDirect(284, option1Draw + 13, option1AmmoMax, 112, option1Ammo, 2, 2);
+									if (button[1 + i] && this_player->sidekick[i].ammo > 0)
+									{
+										JE_initPlayerShot(this_option->wport, shot_i, this_player->sidekick[i].x, this_player->sidekick[i].y, *mouseX_, *mouseY_, this_option->wpnum + this_player->sidekick[i].charge, playerNum_);
+										
+										--this_player->sidekick[i].ammo;
+										if (this_player->sidekick[i].charge > 0)
+										{
+											shotMultiPos[shot_i] = 0;
+											this_player->sidekick[i].charge = 0;
+										}
+										this_player->sidekick[i].charge_ticks = 20;
+										this_player->sidekick[i].animation_enabled = true;
+										
+										// draw sidekick discharge ammo gauge
+										const int y = hud_sidekick_y[twoPlayerMode ? 1 : 0][i] + 13;
+										fill_rectangle_xy(VGAScreenSeg, 284, y, 312, y + 2, 0);
+										draw_segmented_gauge(VGAScreenSeg, 284, y, 112, 2, 2, MAX(1, ammo_max / 10), this_player->sidekick[i].ammo);
+									}
 								}
-							}
-							else if (option1Ammo < 0)
-							{
-								if (button[1-1] || button[2-1])
+								else  // has infinite ammo
 								{
-									JE_initPlayerShot(options[option1Item].wport, SHOT_LEFT_SIDEKICK, this_player->sidekick[LEFT_SIDEKICK].x, this_player->sidekick[LEFT_SIDEKICK].y, *mouseX_, *mouseY_, options[option1Item].wpnum + optionCharge1, playerNum_);
-									
-									if (optionCharge1 > 0)
-										shotMultiPos[SHOT_LEFT_SIDEKICK] = 0;
-									optionCharge1Wait = 20;
-									optionCharge1 = 0;
-									optionAni1Go = true;
+									if (button[0] || button[1 + i])
+									{
+										JE_initPlayerShot(this_option->wport, shot_i, this_player->sidekick[i].x, this_player->sidekick[i].y, *mouseX_, *mouseY_, this_option->wpnum + this_player->sidekick[i].charge, playerNum_);
+										
+										if (this_player->sidekick[i].charge > 0)
+										{
+											shotMultiPos[shot_i] = 0;
+											this_player->sidekick[i].charge = 0;
+										}
+										this_player->sidekick[i].charge_ticks = 20;
+										this_player->sidekick[i].animation_enabled = true;
+									}
 								}
 							}
 						}
 					}
-					
-					// fire right sidekick
-					if (options[option2Item].wport > 0)
-					{
-						if (shotRepeat[SHOT_RIGHT_SIDEKICK] > 0)
-						{
-							--shotRepeat[SHOT_RIGHT_SIDEKICK];
-						}
-						else
-						{
-							if (option2Ammo >= 0)
-							{
-								if (option2AmmoRechargeWait > 0)
-								{
-									option2AmmoRechargeWait--;
-								}
-								else
-								{
-									option2AmmoRechargeWait = option2AmmoRechargeWaitMax;
-									if (option2Ammo < options[option2Item].ammo)
-										option2Ammo++;
-									JE_barDrawDirect(284, option2Draw + 13, option2AmmoMax, 112, option2Ammo, 2, 2);
-								}
-							}
-							
-							if (option2Ammo > 0)
-							{
-								if (button[3-1])
-								{
-									JE_initPlayerShot(options[option2Item].wport, SHOT_RIGHT_SIDEKICK, this_player->sidekick[RIGHT_SIDEKICK].x, this_player->sidekick[RIGHT_SIDEKICK].y, *mouseX_, *mouseY_, options[option2Item].wpnum + optionCharge2, playerNum_);
-									
-									if (optionCharge2 > 0)
-									{
-										shotMultiPos[SHOT_RIGHT_SIDEKICK] = 0;
-										optionCharge2 = 0;
-									}
-									optionCharge2Wait = 20;
-									optionCharge2 = 0;
-									optionAni2Go = true;
-									option2Ammo--;
-									filled_rectangle(VGAScreenSeg, 284, option2Draw + 13, 312, option2Draw + 15, 0);
-									JE_barDrawDirect(284, option2Draw + 13, option2AmmoMax, 112, option2Ammo, 2, 2);
-								}
-							}
-							else if (option2Ammo < 0)
-							{
-								if (button[1-1] || button[3-1])
-								{
-									JE_initPlayerShot(options[option2Item].wport, SHOT_RIGHT_SIDEKICK, this_player->sidekick[RIGHT_SIDEKICK].x, this_player->sidekick[RIGHT_SIDEKICK].y, *mouseX_, *mouseY_, options[option2Item].wpnum + optionCharge2, playerNum_);
-									
-									if (optionCharge2 > 0)
-									{
-										shotMultiPos[SHOT_RIGHT_SIDEKICK] = 0;
-										optionCharge2 = 0;
-									}
-									optionCharge2Wait = 20;
-									optionAni2Go = true;
-								}
-							}
-						}
-					}
-				}
+				}  // end of if player has sidekicks
 			}  // !endLevel
 		} // this_player->is_alive
 	} // moveOK
@@ -4136,61 +4096,37 @@ redo:
 	// draw sidekicks
 	if ((playerNum_ == 2 || !twoPlayerMode) && !endLevel)
 	{
-		if (options[option1Item].option > 0)
+		for (uint i = 0; i < COUNTOF(this_player->sidekick); ++i)
 		{
-			if (optionAni1Go)
+			JE_OptionType *this_option = &options[this_player->items.sidekick[i]];
+			
+			if (this_option->option > 0)
 			{
-				optionAni1++;
-				if (optionAni1 > options[option1Item].ani)
+				if (this_player->sidekick[i].animation_enabled)
 				{
-					optionAni1 = 1;
-					optionAni1Go = options[option1Item].option == 1;
+					if (++this_player->sidekick[i].animation_frame >= this_option->ani)
+					{
+						this_player->sidekick[i].animation_frame = 0;
+						this_player->sidekick[i].animation_enabled = (this_option->option == 1);
+					}
 				}
+				
+				const int x = this_player->sidekick[i].x,
+				          y = this_player->sidekick[i].y;
+				const uint sprite = this_option->gr[this_player->sidekick[i].animation_frame] + this_player->sidekick[i].charge;
+				
+				if (this_player->sidekick[i].style == 1 || this_player->sidekick[i].style == 2)
+					blit_sprite2x2(VGAScreen, x - 6, y, eShapes6, sprite);
+				else
+					blit_sprite2(VGAScreen, x, y, shapes9, sprite);
 			}
 			
-			const int x = this_player->sidekick[LEFT_SIDEKICK].x,
-			          y = this_player->sidekick[LEFT_SIDEKICK].y;
-			
-			if (leftOptionIsSpecial == 1 || leftOptionIsSpecial == 2)
-				blit_sprite2x2(VGAScreen, x - 6, y, eShapes6, options[option1Item].gr[optionAni1-1] + optionCharge1);
-			else
-				blit_sprite2(VGAScreen, x, y, shapes9, options[option1Item].gr[optionAni1-1] + optionCharge1);
-		}
-		
-		if (options[option2Item].option > 0)
-		{
-			if (optionAni2Go)
+			if (--this_player->sidekick[i].charge_ticks == 0)
 			{
-				optionAni2++;
-				if (optionAni2 > options[option2Item].ani)
-				{
-					optionAni2 = 1;
-					optionAni2Go = options[option2Item].option == 1;
-				}
+				if (this_player->sidekick[i].charge < this_option->pwr)
+					++this_player->sidekick[i].charge;
+				this_player->sidekick[i].charge_ticks = 20;
 			}
-			
-			const int x = this_player->sidekick[RIGHT_SIDEKICK].x,
-			          y = this_player->sidekick[RIGHT_SIDEKICK].y;
-			
-			if (rightOptionIsSpecial == 1 || rightOptionIsSpecial == 2)
-				blit_sprite2x2(VGAScreen, x - 6, y, eShapes6, options[option2Item].gr[optionAni2-1] + optionCharge2);
-			else
-				blit_sprite2(VGAScreen, x, y, shapes9, options[option2Item].gr[optionAni2-1] + optionCharge2);
-		}
-		
-		optionCharge1Wait--;
-		if (optionCharge1Wait == 0)
-		{
-			if (optionCharge1 < options[option1Item].pwr)
-				optionCharge1++;
-			optionCharge1Wait = 20;
-		}
-		optionCharge2Wait--;
-		if (optionCharge2Wait == 0)
-		{
-			if (optionCharge2 < options[option2Item].pwr)
-				optionCharge2++;
-			optionCharge2Wait = 20;
 		}
 	}
 }
