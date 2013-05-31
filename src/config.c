@@ -43,7 +43,7 @@ const JE_byte cryptKey[10] = /* [1..10] */
 
 const JE_KeySettingType defaultKeySettings =
 {
-	SDLK_UP, SDLK_DOWN, SDLK_LEFT, SDLK_RIGHT, SDLK_SPACE, SDLK_RETURN, SDLK_LCTRL, SDLK_LALT
+	SDL_SCANCODE_UP, SDL_SCANCODE_DOWN, SDL_SCANCODE_LEFT, SDL_SCANCODE_RIGHT, SDL_SCANCODE_SPACE, SDL_SCANCODE_RETURN, SDL_SCANCODE_LCTRL, SDL_SCANCODE_LALT
 /*	72, 80, 75, 77, 57, 28, 29, 56*/
 };
 
@@ -255,7 +255,7 @@ void save_json( cJSON *root, const char *filename )
 bool load_opentyrian_config( void )
 {
 	// defaults
-	fullscreen_enabled = false;
+	fullscreen_display = -1;
 	set_scaler_by_name("Scale2x");
 	
 	cJSON *root = load_json("opentyrian.conf");
@@ -267,11 +267,14 @@ bool load_opentyrian_config( void )
 	{
 		cJSON *setting;
 		
-		if ((setting = cJSON_GetObjectItem(section, "fullscreen")))
-			fullscreen_enabled = (setting->type == cJSON_True);
+		if ((setting = cJSON_GetObjectItem(section, "fullscreen_display")))
+			fullscreen_display = setting->valueint;
 		
 		if ((setting = cJSON_GetObjectItem(section, "scaler")))
 			set_scaler_by_name(setting->valuestring);
+
+		if ((setting = cJSON_GetObjectItem(section, "hwscaler")))
+			set_scaling_mode_by_name(setting->valuestring);
 	}
 	
 	cJSON_Delete(root);
@@ -293,11 +296,14 @@ bool save_opentyrian_config( void )
 	{
 		cJSON *setting;
 		
-		setting = cJSON_CreateOrGetObjectItem(section, "fullscreen");
-		cJSON_SetBoolean(setting, fullscreen_enabled);
+		setting = cJSON_CreateOrGetObjectItem(section, "fullscreen_display");
+		cJSON_SetNumber(setting, fullscreen_display);
 		
 		setting = cJSON_CreateOrGetObjectItem(section, "scaler");
 		cJSON_SetString(setting, scalers[scaler].name);
+
+		setting = cJSON_CreateOrGetObjectItem(section, "hwscaler");
+		cJSON_SetString(setting, scaling_mode_names[scaling_mode]);
 	}
 	
 	save_json(root, "opentyrian.conf");

@@ -21,23 +21,37 @@
 
 #include "opentyr.h"
 
-#include "SDL.h"
+#include <SDL2/SDL.h>
 
 #define vga_width 320
 #define vga_height 200
 
-extern bool fullscreen_enabled;
+typedef enum {
+	SCALE_CENTER,
+	SCALE_INTEGER,
+	SCALE_ASPECT_8_5,
+	SCALE_ASPECT_4_3,
+	ScalingMode_MAX
+} ScalingMode;
+
+extern const char* scaling_mode_names[ScalingMode_MAX];
+
+extern int fullscreen_display; // -1 means windowed
+extern ScalingMode scaling_mode;
 
 extern SDL_Surface *VGAScreen, *VGAScreenSeg;
 extern SDL_Surface *game_screen;
 extern SDL_Surface *VGAScreen2;
 
+extern SDL_Window* main_window;
+extern SDL_PixelFormat* main_window_tex_format;
+
 void init_video( void );
 
-int can_init_scaler( unsigned int new_scaler, bool fullscreen );
-bool init_scaler( unsigned int new_scaler, bool fullscreen );
-bool can_init_any_scaler( bool fullscreen );
-bool init_any_scaler( bool fullscreen );
+void reinit_fullscreen( int new_display );
+void toggle_fullscreen( void );
+bool init_scaler( unsigned int new_scaler );
+bool set_scaling_mode_by_name( const char* name );
 
 void deinit_video( void );
 
