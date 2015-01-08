@@ -7,14 +7,12 @@ else
 endif
 
 TARGET := opentyrian
-
-WITH_NETWORK := true
+WITH_NETWORK := false
 
 ############################################################
 
 STRIP := strip
-
-SDL_CONFIG := sdl-config
+SDL_CONFIG := sdl2-config
 
 SRCS := $(wildcard src/*.c)
 OBJS := $(SRCS:src/%.c=obj/%.o)

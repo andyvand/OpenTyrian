@@ -23,22 +23,22 @@
 #include "video.h"
 #include "video_scale.h"
 
-#include "SDL.h"
+#include <SDL2/SDL.h>
 #include <stdio.h>
 
 
 JE_boolean ESCPressed;
 
 JE_boolean newkey, newmouse, keydown, mousedown;
-SDLKey lastkey_sym;
-SDLMod lastkey_mod;
+SDL_Scancode lastkey_scan;
+SDL_Keymod lastkey_mod;
 unsigned char lastkey_char;
 Uint8 lastmouse_but;
 Uint16 lastmouse_x, lastmouse_y;
 JE_boolean mouse_pressed[3] = {false, false, false};
 Uint16 mouse_x, mouse_y;
 
-Uint8 keysactive[SDLK_LAST];
+Uint8 keysactive[SDL_NUM_SCANCODES];
 
 #ifdef NDEBUG
 bool input_grab_enabled = true;
@@ -88,12 +88,10 @@ void wait_noinput( JE_boolean keyboard, JE_boolean mouse, JE_boolean joystick )
 
 void init_keyboard( void )
 {
-	SDL_EnableKeyRepeat(500, 60);
+	//SDL_EnableKeyRepeat(500, 60); TODO Find if SDL2 has an equivalent.
 
 	newkey = newmouse = false;
 	keydown = mousedown = false;
-
-	SDL_EnableUNICODE(1);
 }
 
 void input_grab( bool enable )
@@ -102,11 +100,11 @@ void input_grab( bool enable )
 	enable = true;
 #endif
 	
-	input_grab_enabled = enable || fullscreen_enabled;
+	input_grab_enabled = enable || fullscreen_display != -1;
 	
 	SDL_ShowCursor(input_grab_enabled ? SDL_DISABLE : SDL_ENABLE);
 #ifdef NDEBUG
-	SDL_WM_GrabInput(input_grab_enabled ? SDL_GRAB_ON : SDL_GRAB_OFF);
+	SDL_SetWindowGrab(main_window, input_grab_enabled ? SDL_TRUE : SDL_FALSE);
 #endif
 }
 
@@ -122,9 +120,10 @@ void set_mouse_position( int x, int y )
 {
 	if (input_grab_enabled)
 	{
-		SDL_WarpMouse(x * scalers[scaler].width / vga_width, y * scalers[scaler].height / vga_height);
 		mouse_x = x;
 		mouse_y = y;
+		map_screen_to_window_pos(&x, &y);
+		SDL_WarpMouseInWindow(main_window, x, y);
 	}
 }
 
@@ -139,20 +138,32 @@ void service_SDL_events( JE_boolean clear_new )
 	{
 		switch (ev.type)
 		{
-			case SDL_ACTIVEEVENT:
-				if (ev.active.state == SDL_APPINPUTFOCUS && !ev.active.gain)
+			case SDL_WINDOWEVENT:
+				if (ev.window.event == SDL_WINDOWEVENT_FOCUS_LOST)
 					input_grab(false);
 				break;
 			
 			case SDL_MOUSEMOTION:
-				mouse_x = ev.motion.x * vga_width / scalers[scaler].width;
-				mouse_y = ev.motion.y * vga_height / scalers[scaler].height;
+				map_window_to_screen_pos(&ev.motion.x, &ev.motion.y);
+				if (ev.motion.x < 0) {
+					ev.motion.x = 0;
+				} else if (ev.motion.x >= vga_width) {
+					ev.motion.x = vga_width - 1;
+				}
+
+				if (ev.motion.y < 0) {
+					ev.motion.y = 0;
+				} else if (ev.motion.y >= vga_width) {
+					ev.motion.y = vga_width - 1;
+				}
+				mouse_x = ev.motion.x;
+				mouse_y = ev.motion.y;
 				break;
 			case SDL_KEYDOWN:
 				if (ev.key.keysym.mod & KMOD_CTRL)
 				{
 					/* <ctrl><bksp> emergency kill */
-					if (ev.key.keysym.sym == SDLK_BACKSPACE)
+					if (ev.key.keysym.scancode == SDL_SCANCODE_BACKSPACE)
 					{
 						puts("\n\n\nCtrl+Backspace pressed. Doing emergency quit.\n");
 						SDL_Quit();
@@ -160,52 +171,35 @@ void service_SDL_events( JE_boolean clear_new )
 					}
 					
 					/* <ctrl><f10> toggle input grab */
-					if (ev.key.keysym.sym == SDLK_F10)
+					if (ev.key.keysym.scancode == SDL_SCANCODE_F10)
 					{
 						input_grab(!input_grab_enabled);
 						break;
 					}
 				}
 				
-				if (ev.key.keysym.mod & KMOD_ALT)
+				/* <alt><enter> toggle fullscreen */
+				if (ev.key.keysym.mod & KMOD_ALT && ev.key.keysym.scancode == SDL_SCANCODE_RETURN)
 				{
-					/* <alt><enter> toggle fullscreen */
-					if (ev.key.keysym.sym == SDLK_RETURN)
-					{
-						if (!init_scaler(scaler, !fullscreen_enabled) && // try new fullscreen state
-						    !init_any_scaler(!fullscreen_enabled) &&     // try any scaler in new fullscreen state
-						    !init_scaler(scaler, fullscreen_enabled))    // revert on fail
-						{
-							exit(EXIT_FAILURE);
-						}
-						break;
-					}
-					
-					/* <alt><tab> disable input grab and fullscreen */
-					if (ev.key.keysym.sym == SDLK_TAB)
-					{
-						if (!init_scaler(scaler, false) &&             // try windowed
-						    !init_any_scaler(false) &&                 // try any scaler windowed
-						    !init_scaler(scaler, fullscreen_enabled))  // revert on fail
-						{
-							exit(EXIT_FAILURE);
-						}
-						
-						input_grab(false);
-						break;
-					}
+					toggle_fullscreen();
+					input_grab(false);
+					break;
 				}
 
-				keysactive[ev.key.keysym.sym] = 1;
+				keysactive[ev.key.keysym.scancode] = 1;
 				
 				newkey = true;
-				lastkey_sym = ev.key.keysym.sym;
+				lastkey_scan = ev.key.keysym.scancode;
 				lastkey_mod = ev.key.keysym.mod;
-				lastkey_char = ev.key.keysym.unicode;
+				if (ev.key.keysym.sym & SDLK_SCANCODE_MASK) {
+					lastkey_char = 0;
+				} else {
+					lastkey_char = ev.key.keysym.sym & ~SDLK_SCANCODE_MASK;
+				}
 				keydown = true;
 				return;
 			case SDL_KEYUP:
-				keysactive[ev.key.keysym.sym] = 0;
+				keysactive[ev.key.keysym.scancode] = 0;
 				keydown = false;
 				return;
 			case SDL_MOUSEBUTTONDOWN:

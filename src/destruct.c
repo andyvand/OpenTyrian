@@ -164,7 +164,7 @@ struct destruct_moves_s {
 	bool actions[MAX_MOVE];
 };
 struct destruct_keys_s {
-	SDLKey Config[MAX_KEY][MAX_KEY_OPTIONS];
+	SDL_Scancode Config[MAX_KEY][MAX_KEY_OPTIONS];
 };
 struct destruct_ai_s {
 
@@ -324,7 +324,7 @@ static JE_byte basetypes[10][11] /*[1..8, 1..11]*/ = /* [0] is amount of units*/
 	{8, UNIT_HELI, UNIT_HELI, UNIT_HELI, UNIT_HELI,      UNIT_HELI,   UNIT_HELI,      UNIT_HELI,   UNIT_HELI,   UNIT_HELI,   UNIT_HELI},   /*Strong Heli attack fleet*/
 	{4, UNIT_TANK, UNIT_TANK, UNIT_TANK, UNIT_TANK,      UNIT_NUKE,   UNIT_NUKE,      UNIT_DIRT,   UNIT_MAGNET, UNIT_JUMPER, UNIT_JUMPER}, /*Weak   Heli defense fleet*/
 	{8, UNIT_TANK, UNIT_NUKE, UNIT_DIRT, UNIT_SATELLITE, UNIT_MAGNET, UNIT_LASER,     UNIT_JUMPER, UNIT_HELI,   UNIT_TANK,   UNIT_NUKE},   /*Overpowering fleet*/
-	{4, UNIT_TANK, UNIT_TANK, UNIT_NUKE, UNIT_DIRT,      UNIT_TANK,   UNIT_LASER,     UNIT_JUMPER, UNIT_HELI,   UNIT_NUKE,   UNIT_JUMPER}, /*Weak fleet*/
+	{4, UNIT_TANK, UNIT_TANK, UNIT_NUKE, UNIT_DIRT,      UNIT_TANK,   UNIT_LASER,     UNIT_JUMPER, UNIT_HELI,   UNIT_NUKE,   UNIT_JUMPER},  /*Weak fleet*/
 	{5, UNIT_TANK, UNIT_TANK, UNIT_NUKE, UNIT_DIRT,      UNIT_DIRT,   UNIT_SATELLITE, UNIT_MAGNET, UNIT_LASER,  UNIT_JUMPER, UNIT_HELI},   /*Left custom*/
 	{5, UNIT_TANK, UNIT_TANK, UNIT_NUKE, UNIT_DIRT,      UNIT_DIRT,   UNIT_SATELLITE, UNIT_MAGNET, UNIT_LASER,  UNIT_JUMPER, UNIT_HELI},   /*Right custom*/
 };
@@ -347,25 +347,25 @@ static const JE_byte ModeScore[MAX_PLAYERS][MAX_MODES] =
 	{1, 0, 5, 0, 1, 1}
 };
 
-static SDLKey defaultKeyConfig[MAX_PLAYERS][MAX_KEY][MAX_KEY_OPTIONS] =
+static SDL_Scancode defaultKeyConfig[MAX_PLAYERS][MAX_KEY][MAX_KEY_OPTIONS] =
 {
-	{	{SDLK_c},
-		{SDLK_v},
-		{SDLK_a},
-		{SDLK_z},
-		{SDLK_LALT},
-		{SDLK_x, SDLK_LSHIFT},
-		{SDLK_LCTRL},
-		{SDLK_SPACE}
+	{	{SDL_SCANCODE_C},
+		{SDL_SCANCODE_V},
+		{SDL_SCANCODE_A},
+		{SDL_SCANCODE_Z},
+		{SDL_SCANCODE_LALT},
+		{SDL_SCANCODE_X, SDL_SCANCODE_LSHIFT},
+		{SDL_SCANCODE_LCTRL},
+		{SDL_SCANCODE_SPACE}
 	},
-	{	{SDLK_LEFT, SDLK_KP4},
-		{SDLK_RIGHT, SDLK_KP6},
-		{SDLK_UP, SDLK_KP8},
-		{SDLK_DOWN, SDLK_KP2},
-		{SDLK_BACKSLASH, SDLK_KP5},
-		{SDLK_INSERT, SDLK_RETURN, SDLK_KP0, SDLK_KP_ENTER},
-		{SDLK_PAGEUP, SDLK_KP9},
-		{SDLK_PAGEDOWN, SDLK_KP3}
+	{	{SDL_SCANCODE_LEFT, SDL_SCANCODE_KP_4},
+		{SDL_SCANCODE_RIGHT, SDL_SCANCODE_KP_6},
+		{SDL_SCANCODE_UP, SDL_SCANCODE_KP_8},
+		{SDL_SCANCODE_DOWN, SDL_SCANCODE_KP_2},
+		{SDL_SCANCODE_BACKSLASH, SDL_SCANCODE_KP_5},
+		{SDL_SCANCODE_INSERT, SDL_SCANCODE_RETURN, SDL_SCANCODE_KP_0, SDL_SCANCODE_KP_ENTER},
+		{SDL_SCANCODE_PAGEUP, SDL_SCANCODE_KP_9},
+		{SDL_SCANCODE_PAGEDOWN, SDL_SCANCODE_KP_3}
 	}
 };
 
@@ -405,15 +405,6 @@ static enum de_unit_t get_unit_by_name( const char *unit_name )
 			return unit;
 	
 	return UNIT_NONE;
-}
-
-static SDLKey get_SDLKey_by_name( const char *key_name )
-{
-	for (SDLKey key = SDLK_FIRST; key < SDLK_LAST; ++key)
-		if (strcmp(key_name, SDL_GetKeyName(key)) == 0)
-			return key;
-	
-	return SDLK_UNKNOWN;
 }
 
 static void load_destruct_config( config_t *config_ )
@@ -456,8 +447,8 @@ static void load_destruct_config( config_t *config_ )
 			
 			foreach_option_i_value(i, value, option)
 			{
-				SDLKey key = get_SDLKey_by_name(value);
-				if (key != SDLK_LAST && i < COUNTOF(defaultKeyConfig[p][k]))
+				SDL_Scancode key = SDL_GetScancodeFromName(value);
+				if (key != SDL_SCANCODE_UNKNOWN && i < COUNTOF(defaultKeyConfig[p][k]))
 				{
 					defaultKeyConfig[p][k][i] = key;
 				}
@@ -472,13 +463,13 @@ static void load_destruct_config( config_t *config_ )
 			{
 				// unset remaining defaults
 				for (unsigned int i = config_get_value_count(option); i < COUNTOF(defaultKeyConfig[p][k]); ++i)
-					defaultKeyConfig[p][k][i] = SDLK_UNKNOWN;
+					defaultKeyConfig[p][k][i] = SDL_SCANCODE_UNKNOWN;
 			}
 			else
 			{
 				// set defaults
 				for (unsigned int i = 0; i < COUNTOF(defaultKeyConfig[p][k]); ++i)
-					if (defaultKeyConfig[p][k][i] != SDLK_UNKNOWN)
+					if (defaultKeyConfig[p][k][i] != SDL_SCANCODE_UNKNOWN)
 						config_add_value(option, SDL_GetKeyName(defaultKeyConfig[p][k][i]));
 			}
 		}
@@ -688,16 +679,16 @@ static enum de_mode_t JE_modeSelect( void )
 		} while(!newkey);
 
 		/* See what was pressed */
-		if (keysactive[SDLK_ESCAPE])
+		if (keysactive[SDL_SCANCODE_ESCAPE])
 		{
 			mode = MODE_NONE; /* User is quitting, return failure */
 			break;
 		}
-		if (keysactive[SDLK_RETURN])
+		if (keysactive[SDL_SCANCODE_RETURN])
 		{
 			break; /* User has selected, return choice */
 		}
-		if (keysactive[SDLK_UP])
+		if (keysactive[SDL_SCANCODE_UP])
 		{
 			if(mode == MODE_FIRST)
 			{
@@ -711,7 +702,7 @@ static enum de_mode_t JE_modeSelect( void )
 				mode--;
 			}
 		}
-		if (keysactive[SDLK_DOWN])
+		if (keysactive[SDL_SCANCODE_DOWN])
 		{
 			if(mode >= MODE_LAST-1)
 			{
@@ -1050,8 +1041,8 @@ static void JE_aliasDirt( SDL_Surface * screen )
 	Uint8 *s = screen->pixels;
 	s += 12 * screen->pitch;
 
-	for (y = 12; y < (unsigned)screen->h; y++) {
-		for (x = 0; x < screen->pitch; x++) {
+	for (y = 12; y < (unsigned int)screen->h; y++) {
+		for (x = 0; x < (unsigned int)screen->pitch; x++) {
 			if (*s == PIXEL_BLACK) {
 				*s = aliasDirtPixel(screen, x, y, s);
 			}
@@ -1478,39 +1469,39 @@ static enum de_state_t DE_RunTick( void )
 	DE_RunTickPlaySounds();
 
 	/* The rest of this cruft needs to be put in appropriate sections */
-	if (keysactive[SDLK_F10])
+	if (keysactive[SDL_SCANCODE_F10])
 	{
 		destruct_player[PLAYER_LEFT].is_cpu = !destruct_player[PLAYER_LEFT].is_cpu;
-		keysactive[SDLK_F10] = false;
+		keysactive[SDL_SCANCODE_F10] = false;
 	}
-	if (keysactive[SDLK_F11])
+	if (keysactive[SDL_SCANCODE_F11])
 	{
 		destruct_player[PLAYER_RIGHT].is_cpu = !destruct_player[PLAYER_RIGHT].is_cpu;
-		keysactive[SDLK_F11] = false;
+		keysactive[SDL_SCANCODE_F11] = false;
 	}
-	if (keysactive[SDLK_p])
+	if (keysactive[SDL_SCANCODE_P])
 	{
 		JE_pauseScreen();
-		keysactive[lastkey_sym] = false;
+		keysactive[lastkey_scan] = false;
 	}
 
-	if (keysactive[SDLK_F1])
+	if (keysactive[SDL_SCANCODE_F1])
 	{
 		JE_helpScreen();
-		keysactive[lastkey_sym] = false;
+		keysactive[lastkey_scan] = false;
 	}
 
 	wait_delay();
 
-	if (keysactive[SDLK_ESCAPE])
+	if (keysactive[SDL_SCANCODE_ESCAPE])
 	{
-		keysactive[SDLK_ESCAPE] = false;
+		keysactive[SDL_SCANCODE_ESCAPE] = false;
 		return(STATE_INIT); /* STATE_INIT drops us to the mode select */
 	}
 
-	if (keysactive[SDLK_BACKSPACE])
+	if (keysactive[SDL_SCANCODE_BACKSPACE])
 	{
-		keysactive[SDLK_BACKSPACE] = false;
+		keysactive[SDL_SCANCODE_BACKSPACE] = false;
 		return(STATE_RELOAD); /* STATE_RELOAD creates a new map */
 	}
 
@@ -2248,7 +2239,7 @@ static void DE_RunTickDrawHUD( void )
 static void DE_RunTickGetInput( void )
 {
 	unsigned int player_index, key_index, slot_index;
-	SDLKey key;
+	SDL_Scancode key;
 
 	/* destruct_player.keys holds our key config.  Players will eventually be
 	 * allowed to can change their key mappings.  destruct_player.moves and
@@ -2264,7 +2255,7 @@ static void DE_RunTickGetInput( void )
 			for(slot_index = 0; slot_index < MAX_KEY_OPTIONS; slot_index++)
 			{
 				key = destruct_player[player_index].keys.Config[key_index][slot_index];
-				if(key == SDLK_UNKNOWN) { break; }
+				if(key == SDL_SCANCODE_UNKNOWN) { break; }
 				if(keysactive[key] == true)
 				{
 					/* The right key was clearly pressed */

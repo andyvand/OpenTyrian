@@ -214,15 +214,13 @@ void poll_joysticks( void )
 }
 
 // sends SDL KEYDOWN and KEYUP events for a key
-void push_key( SDLKey key )
+void push_key( SDL_Scancode key )
 {
 	SDL_Event e;
 	
 	memset(&e.key.keysym, 0, sizeof(e.key.keysym));
 	
-	e.key.keysym.sym = key;
-	e.key.keysym.unicode = key;
-	
+	e.key.keysym.scancode = key;
 	e.key.state = SDL_RELEASED;
 	
 	e.type = SDL_KEYDOWN;
@@ -235,8 +233,8 @@ void push_key( SDLKey key )
 // helps us be lazy by pretending joysticks are a keyboard (useful for menus)
 void push_joysticks_as_keyboard( void )
 {
-	const SDLKey confirm = SDLK_RETURN, cancel = SDLK_ESCAPE;
-	const SDLKey direction[4] = { SDLK_UP, SDLK_RIGHT, SDLK_DOWN, SDLK_LEFT };
+	const SDL_Scancode confirm = SDL_SCANCODE_RETURN, cancel = SDL_SCANCODE_ESCAPE;
+	const SDL_Scancode direction[4] = { SDL_SCANCODE_UP, SDL_SCANCODE_RIGHT, SDL_SCANCODE_DOWN, SDL_SCANCODE_LEFT };
 	
 	poll_joysticks();
 	
@@ -283,7 +281,7 @@ void init_joysticks( void )
 		joystick[j].handle = SDL_JoystickOpen(j);
 		if (joystick[j].handle != NULL)
 		{
-			printf("joystick detected: %s ", SDL_JoystickName(j));
+			printf("joystick detected: %s ", SDL_JoystickName(joystick[j].handle));
 			printf("(%d axes, %d buttons, %d hats)\n", 
 			       SDL_JoystickNumAxes(joystick[j].handle),
 			       SDL_JoystickNumButtons(joystick[j].handle),
@@ -377,7 +375,7 @@ static const char* const assignment_names[] =
 
 bool load_joystick_assignments( config_t *config, int j )
 {
-	config_section_t *section = config_find_section(config, "joystick", SDL_JoystickName(j));
+	config_section_t *section = config_find_section(config, "joystick", SDL_JoystickName(joystick[j].handle));
 	if (section == NULL)
 		return false;
 	
@@ -411,7 +409,7 @@ bool load_joystick_assignments( config_t *config, int j )
 
 bool save_joystick_assignments( config_t *config, int j )
 {
-	config_section_t *section = config_find_or_add_section(config, "joystick", SDL_JoystickName(j));
+	config_section_t *section = config_find_or_add_section(config, "joystick", SDL_JoystickName(joystick[j].handle));
 	if (section == NULL)
 		exit(EXIT_FAILURE);  // out of memory
 	

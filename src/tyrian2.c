@@ -3396,16 +3396,16 @@ bool JE_titleScreen( JE_boolean animate )
 
 			if (newkey)
 			{
-				switch (lastkey_sym)
+				switch (lastkey_scan)
 				{
-				case SDLK_UP:
+				case SDL_SCANCODE_UP:
 					if (menu == 0)
 						menu = menunum-1;
 					else
 						menu--;
 					JE_playSampleNum(S_CURSOR);
 					break;
-				case SDLK_DOWN:
+				case SDL_SCANCODE_DOWN:
 					if (menu == menunum-1)
 						menu = 0;
 					else
@@ -3437,7 +3437,7 @@ bool JE_titleScreen( JE_boolean animate )
 						JE_playSampleNum(V_DATA_CUBE);
 						JE_whoa();
 
-						initialDifficulty = keysactive[SDLK_SCROLLOCK] ? 6 : 8;
+						initialDifficulty = keysactive[SDL_SCANCODE_SCROLLLOCK] ? 6 : 8;
 
 						JE_clr256(VGAScreen);
 						JE_outText(VGAScreen, 10, 10, "Cheat codes have been disabled.", 15, 4);
@@ -3524,12 +3524,12 @@ bool JE_titleScreen( JE_boolean animate )
 
 			if (newkey)
 			{
-				switch (lastkey_sym)
+				switch (lastkey_scan)
 				{
-				case SDLK_ESCAPE:
+				case SDL_SCANCODE_ESCAPE:
 					quit = true;
 					break;
-				case SDLK_RETURN:
+				case SDL_SCANCODE_RETURN:
 					JE_playSampleNum(S_SELECT);
 					switch (menu)
 					{
@@ -5075,7 +5075,7 @@ void JE_whoa( void )
 	levelWarningLines = 4;
 }
 
-void JE_barX( JE_word x1, JE_word y1, JE_word x2, JE_word y2, JE_byte col )
+static void JE_barX( JE_word x1, JE_word y1, JE_word x2, JE_word y2, JE_byte col )
 {
 	fill_rectangle_xy(VGAScreen, x1, y1,     x2, y1,     col + 1);
 	fill_rectangle_xy(VGAScreen, x1, y1 + 1, x2, y2 - 1, col    );

@@ -31,6 +31,7 @@
 #include "video_scale.h"
 
 #include <unistd.h>
+#include <stdio.h>
 #include <sys/stat.h>
 
 
@@ -43,7 +44,7 @@ const JE_byte cryptKey[10] = /* [1..10] */
 
 const JE_KeySettingType defaultKeySettings =
 {
-	SDLK_UP, SDLK_DOWN, SDLK_LEFT, SDLK_RIGHT, SDLK_SPACE, SDLK_RETURN, SDLK_LCTRL, SDLK_LALT
+	SDL_SCANCODE_UP, SDL_SCANCODE_DOWN, SDL_SCANCODE_LEFT, SDL_SCANCODE_RIGHT, SDL_SCANCODE_SPACE, SDL_SCANCODE_RETURN, SDL_SCANCODE_LCTRL, SDL_SCANCODE_LALT
 /*	72, 80, 75, 77, 57, 28, 29, 56*/
 };
 
@@ -218,7 +219,7 @@ config_t opentyrian_config;  // implicitly initialized
 bool load_opentyrian_config( void )
 {
 	// defaults
-	fullscreen_enabled = false;
+	fullscreen_display = -1;
 	set_scaler_by_name("Scale2x");
 	
 	config_t *config = &opentyrian_config;
@@ -239,11 +240,15 @@ bool load_opentyrian_config( void )
 	section = config_find_section(config, "video", NULL);
 	if (section != NULL)
 	{
-		config_get_bool_option(section, "fullscreen", &fullscreen_enabled);
+		config_get_int_option(section, "fullscreen", &fullscreen_display);
 		
 		const char *scaler;
 		if (config_get_string_option(section, "scaler", &scaler))
 			set_scaler_by_name(scaler);
+		
+		const char *scaling_mode;
+		if (config_get_string_option(section, "scaling_mode", &scaling_mode))
+			set_scaling_mode_by_name(scaling_mode);
 	}
 	
 	fclose(file);
@@ -261,9 +266,11 @@ bool save_opentyrian_config( void )
 	if (section == NULL)
 		exit(EXIT_FAILURE);  // out of memory
 	
-	config_set_bool_option(section, "fullscreen", fullscreen_enabled, NO_YES);
-
+	config_set_int_option(section, "fullscreen", fullscreen_display);
+	
 	config_set_string_option(section, "scaler", scalers[scaler].name);
+	
+	config_set_string_option(section, "scaling_mode", scaling_mode_names[scaling_mode]);
 	
 #ifndef TARGET_WIN32
 	mkdir(get_user_directory(), 0700);
@@ -277,7 +284,7 @@ bool save_opentyrian_config( void )
 	
 	config_write(config, file);
 	
-#ifndef TARGET_WIN32
+#if _POSIX_C_SOURCE >= 1 || _XOPEN_SOURCE || _POSIX_SOURCE
 	fsync(fileno(file));
 #endif
 	fclose(file);
@@ -966,7 +973,7 @@ void JE_saveConfiguration( void )
 	{
 		efwrite(saveTemp, 1, sizeof(saveTemp), f);
 
-#ifndef TARGET_WIN32
+#if _POSIX_C_SOURCE >= 1 || _XOPEN_SOURCE || _POSIX_SOURCE
 		fsync(fileno(f));
 #endif
 		fclose(f);
@@ -998,7 +1005,7 @@ void JE_saveConfiguration( void )
 		
 		efwrite(keySettings, sizeof(*keySettings), COUNTOF(keySettings), f);
 		
-#ifndef TARGET_WIN32
+#if _POSIX_C_SOURCE >= 1 || _XOPEN_SOURCE || _POSIX_SOURCE
 		fsync(fileno(f));
 #endif
 		fclose(f);
